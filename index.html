@@ -6,46 +6,49 @@
   <title>Scene Test Automation</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 24px; background: #0d1117; color: #e6edf3; }
-    h1 { margin-bottom: 8px; color: #f0f6fc; }
-    .subtitle { color: #7d8590; margin-bottom: 24px; }
+    body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 32px; background: #0d1117; color: #e6edf3; font-size: 16px; }
+    h1 { margin-bottom: 6px; color: #f0f6fc; font-size: 1.8em; }
+    .subtitle { color: #7d8590; margin-bottom: 28px; font-size: 1em; }
 
-    .header-row { display: flex; gap: 24px; margin-bottom: 12px; }
-    .header-row h2 { font-size: 1.15em; padding-bottom: 8px; border-bottom: 2px solid #30363d; }
-    .col-left { flex: 1; min-width: 0; }
-    .col-right { width: 280px; flex-shrink: 0; }
-
-    .row { display: flex; gap: 24px; margin-bottom: 10px; align-items: center; }
-    .run { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px 18px; flex: 1; min-width: 0; }
-    .run-header { font-weight: 600; margin-bottom: 8px; color: #f0f6fc; }
-    .files { display: flex; gap: 8px; flex-wrap: wrap; }
-    .file-link { display: inline-block; padding: 5px 12px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; color: #79c0ff; text-decoration: none; font-size: 0.85em; }
+    .run { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .run-left { flex: 1; min-width: 0; }
+    .run-title { font-weight: 700; font-size: 1.15em; color: #f0f6fc; margin-bottom: 10px; }
+    .files { display: flex; gap: 10px; flex-wrap: wrap; }
+    .file-link { display: inline-block; padding: 6px 14px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; color: #79c0ff; text-decoration: none; font-size: 0.9em; cursor: pointer; }
     .file-link:hover { background: #2d3a54; }
     .file-link.drive { background: #122117; border-color: #2ea04f; color: #56d364; }
     .file-link.drive:hover { background: #1a3326; }
-    .preview { max-width: 220px; margin-top: 8px; border-radius: 4px; border: 1px solid #30363d; }
 
-    .summary-box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 10px 16px; width: 280px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .summary-gpu { font-family: monospace; font-size: 1em; color: #79c0ff; font-weight: 600; white-space: nowrap; }
+    .gpu-box { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 8px; padding: 14px 20px; text-align: center; flex-shrink: 0; }
+    .gpu-label { font-size: 0.8em; color: #7d8590; margin-bottom: 4px; }
+    .gpu-value { font-family: monospace; font-size: 1.4em; color: #79c0ff; font-weight: 700; }
 
-    .loading { color: #7d8590; padding: 30px 0; text-align: center; }
+    .loading { color: #7d8590; padding: 40px 0; text-align: center; font-size: 1em; }
     .error { color: #f85149; padding: 16px; background: #2d1215; border: 1px solid #f8514933; border-radius: 8px; font-size: 0.9em; }
-    .empty { color: #7d8590; padding: 20px 0; text-align: center; font-style: italic; }
+    .empty { color: #7d8590; padding: 30px 0; text-align: center; font-style: italic; }
+
+    /* Popup overlay */
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+    .overlay.active { display: flex; }
+    .overlay img { max-width: 90%; max-height: 90%; border-radius: 8px; cursor: default; }
+    .overlay-close { position: fixed; top: 20px; right: 30px; color: #fff; font-size: 2em; cursor: pointer; z-index: 1001; }
+
     @media (max-width: 700px) {
-      .header-row, .row { flex-direction: column; }
-      .col-right, .summary-box { width: 100%; }
+      .run { flex-direction: column; align-items: flex-start; }
+      .gpu-box { width: 100%; }
     }
   </style>
 </head>
 <body>
   <h1>Scene Test Automation</h1>
   <p class="subtitle">Test results dashboard</p>
-
-  <div class="header-row">
-    <h2 class="col-left">📁 Test Runs</h2>
-    <h2 class="col-right">📊 GPU Summary</h2>
-  </div>
   <div id="content"><p class="loading">Loading...</p></div>
+
+  <!-- Image popup -->
+  <div class="overlay" id="overlay" onclick="closePopup()">
+    <span class="overlay-close" onclick="closePopup()">&times;</span>
+    <img id="popup-img" src="" alt="Graph" onclick="event.stopPropagation()">
+  </div>
 
   <script>
     const REPO_OWNER = "TheTripleL123";
@@ -54,6 +57,20 @@
 
     const API_BASE = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents`;
     const RAW = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
+
+    function openPopup(url) {
+      document.getElementById("popup-img").src = url;
+      document.getElementById("overlay").classList.add("active");
+    }
+
+    function closePopup() {
+      document.getElementById("overlay").classList.remove("active");
+      document.getElementById("popup-img").src = "";
+    }
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") closePopup();
+    });
 
     function forceDownload(url, filename) {
       fetch(url)
@@ -111,36 +128,28 @@
           const driveLink = summaryEntry ? summaryEntry.drive_link : null;
           const avgGpu = summaryEntry ? summaryEntry.avg_gpu : "—";
 
-          html += `<div class="row">`;
-
-          // Left: test run
           html += `<div class="run">`;
-          html += `<div class="run-header">${folder.name}</div>`;
+          html += `<div class="run-left">`;
+          html += `<div class="run-title">${folder.name}</div>`;
           html += `<div class="files">`;
 
-          let pngUrl = null;
           for (const file of files) {
             const rawUrl = `${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/${file.name}`;
             if (file.name.endsWith(".csv")) {
-              html += `<a class="file-link" href="#" onclick="forceDownload('${rawUrl}', '${file.name}'); return false;">📊 CSV</a>`;
+              html += `<a class="file-link" href="#" onclick="forceDownload('${rawUrl}', '${file.name}'); return false;">📊 CSV Report</a>`;
             } else if (file.name.endsWith(".png")) {
-              pngUrl = rawUrl;
-              html += `<a class="file-link" href="${rawUrl}" target="_blank">🖼️ Graph</a>`;
+              html += `<a class="file-link" href="#" onclick="openPopup('${rawUrl}'); return false;">🖼️ GPU Graph</a>`;
             }
           }
           if (driveLink) {
-            html += `<a class="file-link drive" href="${driveLink}" target="_blank">🎬 Recording</a>`;
+            html += `<a class="file-link drive" href="${driveLink}" target="_blank">🎬 Recording (Drive)</a>`;
           }
           html += `</div>`;
-          if (pngUrl) {
-            html += `<img class="preview" src="${pngUrl}" alt="Graph" loading="lazy">`;
-          }
           html += `</div>`;
 
-          // Right: GPU summary
-          html += `<div class="summary-box">`;
-          html += `<span>Avg GPU</span>`;
-          html += `<span class="summary-gpu">${avgGpu}</span>`;
+          html += `<div class="gpu-box">`;
+          html += `<div class="gpu-label">Average GPU</div>`;
+          html += `<div class="gpu-value">${avgGpu}</div>`;
           html += `</div>`;
 
           html += `</div>`;
