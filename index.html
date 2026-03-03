@@ -19,9 +19,9 @@
     .file-link.drive { background: #122117; border-color: #2ea04f; color: #56d364; }
     .file-link.drive:hover { background: #1a3326; }
 
-    .gpu-box { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 8px; padding: 16px 24px; text-align: center; flex-shrink: 0; }
-    .gpu-label { font-size: 0.85em; color: #7d8590; margin-bottom: 4px; }
-    .gpu-value { font-family: monospace; font-size: 2.2em; color: #79c0ff; font-weight: 700; }
+    .gpu-box { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 8px; padding: 20px 32px; text-align: center; flex-shrink: 0; min-width: 180px; }
+    .gpu-label { font-size: 0.85em; color: #7d8590; margin-bottom: 6px; letter-spacing: 0.05em; }
+    .gpu-value { font-family: monospace; font-size: 2.6em; color: #79c0ff; font-weight: 700; }
 
     .loading { color: #7d8590; padding: 40px 0; text-align: center; font-size: 1em; }
     .error { color: #f85149; padding: 16px; background: #2d1215; border: 1px solid #f8514933; border-radius: 8px; font-size: 0.9em; }
@@ -57,25 +57,13 @@
 </head>
 <body>
   <h1>Scene Test Automation</h1>
-  <p class="subtitle">Test results dashboard</p>
+  <p class="subtitle">Test results dashboard — <a href="https://drive.google.com/drive/u/5/folders/1Ckhix2o8tbz3VA6i25UQ1jf7JKx5bkQD" target="_blank" style="color: #79c0ff; text-decoration: none;">📂 Google Drive Folder</a></p>
   <div id="content"><p class="loading">Loading...</p></div>
 
   <!-- Image popup -->
   <div class="overlay" id="overlay" onclick="closePopup()">
     <span class="overlay-close" onclick="closePopup()">&times;</span>
     <img id="popup-img" src="" alt="Graph" onclick="event.stopPropagation()">
-  </div>
-
-  <!-- Confirm delete popup -->
-  <div class="confirm-overlay" id="confirmOverlay">
-    <div class="confirm-box">
-      <p>Are you sure you want to delete this test?</p>
-      <div class="confirm-name" id="confirmName"></div>
-      <div class="confirm-buttons">
-        <button class="btn-cancel" onclick="cancelDelete()">Cancel</button>
-        <button class="btn-delete" onclick="confirmDelete()">Delete</button>
-      </div>
-    </div>
   </div>
 
   <script>
@@ -191,7 +179,8 @@
         const items = await res.json();
 
         const folders = items.filter(item => item.type === "dir");
-        folders.sort((a, b) => b.name.localeCompare(a.name));
+        // Reverse to show newest first (GitHub API returns oldest first)
+        folders.reverse();
 
         if (folders.length === 0) {
           container.innerHTML = '<p class="empty">No test runs yet.</p>';
@@ -229,13 +218,13 @@
             }
           }
           if (driveLink) {
-            html += `<a class="file-link drive" href="${driveLink}" target="_blank">🎬 Recording (Drive)</a>`;
+            html += `<a class="file-link drive" href="${driveLink}" target="_blank">📂 Drive Folder</a>`;
           }
           html += `</div>`;
           html += `</div>`;
 
           html += `<div class="gpu-box">`;
-          html += `<div class="gpu-label">Average GPU</div>`;
+          html += `<div class="gpu-label">AVERAGE GPU</div>`;
           html += `<div class="gpu-value">${avgGpu}</div>`;
           html += `</div>`;
 
