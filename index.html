@@ -6,43 +6,46 @@
   <title>Scene Test Automation</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 24px; background: #f5f5f5; color: #333; }
-    h1 { margin-bottom: 8px; }
-    .subtitle { color: #888; margin-bottom: 24px; }
-    .columns { display: flex; gap: 24px; align-items: flex-start; }
-    .column { flex: 1; min-width: 0; }
-    h2 { font-size: 1.15em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #ddd; }
-    .run { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; }
-    .run-header { font-weight: 600; margin-bottom: 8px; color: #111; }
+    body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 24px; background: #0d1117; color: #e6edf3; }
+    h1 { margin-bottom: 8px; color: #f0f6fc; }
+    .subtitle { color: #7d8590; margin-bottom: 24px; }
+
+    .header-row { display: flex; gap: 24px; margin-bottom: 12px; }
+    .header-row h2 { font-size: 1.15em; padding-bottom: 8px; border-bottom: 2px solid #30363d; }
+    .col-left { flex: 1; min-width: 0; }
+    .col-right { width: 280px; flex-shrink: 0; }
+
+    .row { display: flex; gap: 24px; margin-bottom: 10px; align-items: center; }
+    .run { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px 18px; flex: 1; min-width: 0; }
+    .run-header { font-weight: 600; margin-bottom: 8px; color: #f0f6fc; }
     .files { display: flex; gap: 8px; flex-wrap: wrap; }
-    .file-link { display: inline-block; padding: 5px 12px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; color: #4338ca; text-decoration: none; font-size: 0.85em; }
-    .file-link:hover { background: #c7d2fe; }
-    .file-link.drive { background: #f0fdf4; border-color: #86efac; color: #166534; }
-    .file-link.drive:hover { background: #bbf7d0; }
-    .preview { max-width: 220px; margin-top: 8px; border-radius: 4px; border: 1px solid #ddd; }
-    .summary-item { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 10px 16px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-    .summary-name { font-weight: 500; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .summary-gpu { font-family: monospace; font-size: 0.95em; color: #2563eb; font-weight: 600; white-space: nowrap; }
-    .loading { color: #999; padding: 30px 0; text-align: center; }
-    .error { color: #dc2626; padding: 16px; background: #fef2f2; border-radius: 8px; font-size: 0.9em; }
-    .empty { color: #999; padding: 20px 0; text-align: center; font-style: italic; }
-    @media (max-width: 700px) { .columns { flex-direction: column; } }
+    .file-link { display: inline-block; padding: 5px 12px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; color: #79c0ff; text-decoration: none; font-size: 0.85em; }
+    .file-link:hover { background: #2d3a54; }
+    .file-link.drive { background: #122117; border-color: #2ea04f; color: #56d364; }
+    .file-link.drive:hover { background: #1a3326; }
+    .preview { max-width: 220px; margin-top: 8px; border-radius: 4px; border: 1px solid #30363d; }
+
+    .summary-box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 10px 16px; width: 280px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .summary-gpu { font-family: monospace; font-size: 1em; color: #79c0ff; font-weight: 600; white-space: nowrap; }
+
+    .loading { color: #7d8590; padding: 30px 0; text-align: center; }
+    .error { color: #f85149; padding: 16px; background: #2d1215; border: 1px solid #f8514933; border-radius: 8px; font-size: 0.9em; }
+    .empty { color: #7d8590; padding: 20px 0; text-align: center; font-style: italic; }
+    @media (max-width: 700px) {
+      .header-row, .row { flex-direction: column; }
+      .col-right, .summary-box { width: 100%; }
+    }
   </style>
 </head>
 <body>
   <h1>Scene Test Automation</h1>
   <p class="subtitle">Test results dashboard</p>
 
-  <div class="columns">
-    <div class="column">
-      <h2>📁 Test Runs</h2>
-      <div id="runs"><p class="loading">Loading runs...</p></div>
-    </div>
-    <div class="column">
-      <h2>📊 GPU Summary</h2>
-      <div id="summary"><p class="loading">Loading summary...</p></div>
-    </div>
+  <div class="header-row">
+    <h2 class="col-left">📁 Test Runs</h2>
+    <h2 class="col-right">📊 GPU Summary</h2>
   </div>
+  <div id="content"><p class="loading">Loading...</p></div>
 
   <script>
     const REPO_OWNER = "TheTripleL123";
@@ -65,8 +68,23 @@
         .catch(err => alert("Download failed: " + err.message));
     }
 
-    async function loadRuns() {
-      const container = document.getElementById("runs");
+    async function load() {
+      const container = document.getElementById("content");
+
+      // Load summary
+      let summaryEntries = [];
+      try {
+        const sRes = await fetch(`${RAW}/summary.json?t=${Date.now()}`);
+        if (sRes.ok) {
+          const text = await sRes.text();
+          const trimmed = text.trim();
+          if (trimmed && trimmed !== "[]") {
+            summaryEntries = JSON.parse(trimmed);
+          }
+        }
+      } catch (e) {}
+
+      // Load run folders
       try {
         const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`);
         if (res.status === 404) {
@@ -84,28 +102,18 @@
           return;
         }
 
-        // Load summary to get Drive links
-        let summaryEntries = [];
-        try {
-          const sRes = await fetch(`${RAW}/summary.json?t=${Date.now()}`);
-          if (sRes.ok) {
-            const text = await sRes.text();
-            const trimmed = text.trim();
-            if (trimmed && trimmed !== "[]") {
-              summaryEntries = JSON.parse(trimmed);
-            }
-          }
-        } catch (e) {}
-
         let html = "";
         for (const folder of folders) {
           const filesRes = await fetch(folder.url);
           const files = await filesRes.json();
 
-          // Find matching summary entry for Drive link
           const summaryEntry = summaryEntries.find(e => e.name === folder.name);
           const driveLink = summaryEntry ? summaryEntry.drive_link : null;
+          const avgGpu = summaryEntry ? summaryEntry.avg_gpu : "—";
 
+          html += `<div class="row">`;
+
+          // Left: test run
           html += `<div class="run">`;
           html += `<div class="run-header">${folder.name}</div>`;
           html += `<div class="files">`;
@@ -113,65 +121,38 @@
           let pngUrl = null;
           for (const file of files) {
             const rawUrl = `${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/${file.name}`;
-
             if (file.name.endsWith(".csv")) {
-              // CSV: force download via JS
               html += `<a class="file-link" href="#" onclick="forceDownload('${rawUrl}', '${file.name}'); return false;">📊 CSV</a>`;
             } else if (file.name.endsWith(".png")) {
-              // PNG: open in new tab
               pngUrl = rawUrl;
               html += `<a class="file-link" href="${rawUrl}" target="_blank">🖼️ Graph</a>`;
             }
           }
-
-          // MP4: link to Google Drive
           if (driveLink) {
-            html += `<a class="file-link drive" href="${driveLink}" target="_blank">🎬 Recording (Drive)</a>`;
+            html += `<a class="file-link drive" href="${driveLink}" target="_blank">🎬 Recording</a>`;
           }
-
           html += `</div>`;
           if (pngUrl) {
             html += `<img class="preview" src="${pngUrl}" alt="Graph" loading="lazy">`;
           }
           html += `</div>`;
-        }
-        container.innerHTML = html;
-      } catch (err) {
-        container.innerHTML = `<div class="error">Failed to load runs: ${err.message}</div>`;
-      }
-    }
 
-    async function loadSummary() {
-      const container = document.getElementById("summary");
-      try {
-        const res = await fetch(`${RAW}/summary.json?t=${Date.now()}`);
-        if (!res.ok) throw new Error(`Could not load summary.json (${res.status})`);
-        const text = await res.text();
-        const trimmed = text.trim();
+          // Right: GPU summary
+          html += `<div class="summary-box">`;
+          html += `<span>Avg GPU</span>`;
+          html += `<span class="summary-gpu">${avgGpu}</span>`;
+          html += `</div>`;
 
-        if (!trimmed || trimmed === "[]") {
-          container.innerHTML = '<p class="empty">No entries yet.</p>';
-          return;
-        }
-
-        const entries = JSON.parse(trimmed);
-
-        const reversed = [...entries].reverse();
-        let html = "";
-        for (const entry of reversed) {
-          html += `<div class="summary-item">`;
-          html += `<span class="summary-name">${entry.name}</span>`;
-          html += `<span class="summary-gpu">${entry.avg_gpu}</span>`;
           html += `</div>`;
         }
+
         container.innerHTML = html;
       } catch (err) {
-        container.innerHTML = `<div class="error">Failed to load summary: ${err.message}</div>`;
+        container.innerHTML = `<div class="error">Failed to load: ${err.message}</div>`;
       }
     }
 
-    loadRuns();
-    loadSummary();
+    load();
   </script>
 </body>
 </html>
