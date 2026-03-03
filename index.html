@@ -34,7 +34,7 @@
     .overlay-close { position: fixed; top: 20px; right: 30px; color: #fff; font-size: 2em; cursor: pointer; z-index: 1001; }
 
     .delete-btn { background: none; border: none; color: #7d8590; font-size: 1.4em; cursor: pointer; padding: 8px; border-radius: 6px; transition: color 0.2s, background 0.2s; flex-shrink: 0; }
-    .delete-btn:hover { color: #f85149; background: #2d1215; }
+    .delete-btn:hover { color: #ff6b6b; background: #4a1a1a; }
 
     /* Confirm popup */
     .confirm-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
@@ -130,14 +130,17 @@
       cancelDelete();
 
       try {
-        // Get all files in the folder
-        const res = await fetch(`${API_BASE}/AllTestRuns/${encodeURIComponent(folderName)}?ref=${BRANCH}`, { headers: GITHUB_HEADERS });
-        if (!res.ok) throw new Error("Could not list folder contents");
+        const encoded = encodeURIComponent(folderName);
+        // Get all files in the folder — use auth headers
+        const res = await fetch(`${API_BASE}/AllTestRuns/${encoded}?ref=${BRANCH}`, {
+          headers: GITHUB_HEADERS
+        });
+        if (!res.ok) throw new Error("Could not list folder contents (" + res.status + ")");
         const files = await res.json();
 
-        // Delete each file
+        // Delete each file one by one
         for (const file of files) {
-          const delRes = await fetch(`${API_BASE}/AllTestRuns/${encodeURIComponent(folderName)}/${file.name}`, {
+          const delRes = await fetch(`${API_BASE}/AllTestRuns/${encoded}/${encodeURIComponent(file.name)}`, {
             method: "DELETE",
             headers: { ...GITHUB_HEADERS, "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -146,10 +149,13 @@
               branch: BRANCH
             })
           });
-          if (!delRes.ok) throw new Error(`Failed to delete ${file.name}`);
+          if (!delRes.ok) {
+            const errBody = await delRes.text();
+            throw new Error(`Failed to delete ${file.name}: ${delRes.status} ${errBody}`);
+          }
         }
 
-        // Reload the page
+        // Reload
         load();
       } catch (err) {
         alert("Delete failed: " + err.message);
@@ -230,7 +236,7 @@
           html += `<div class="gpu-value">${avgGpu}</div>`;
           html += `</div>`;
 
-          html += `<button class="delete-btn" title="Delete test" onclick="askDelete('${folder.name.replace(/'/g, "\\'")}')">🗑️</button>`;
+          html += `<button class="delete-btn" title="Delete test" onclick="askDelete('${folder.name.replace(/'/g, "\\'")}')">🗑</button>`;
 
           html += `</div>`;
         }
