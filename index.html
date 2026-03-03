@@ -6,45 +6,61 @@
   <title>Scene Test Automation</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 24px; background: #f5f5f5; color: #333; }
+    body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 0 auto; padding: 24px; background: #f5f5f5; color: #333; }
     h1 { margin-bottom: 8px; }
     .subtitle { color: #888; margin-bottom: 24px; }
-    .run { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; }
-    .run-header { font-weight: 600; margin-bottom: 10px; color: #111; }
-    .files { display: flex; gap: 10px; flex-wrap: wrap; }
-    .file-link { display: inline-block; padding: 6px 14px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; color: #4338ca; text-decoration: none; font-size: 0.9em; }
+    .columns { display: flex; gap: 24px; align-items: flex-start; }
+    .column { flex: 1; min-width: 0; }
+    h2 { font-size: 1.15em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #ddd; }
+    .run { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; }
+    .run-header { font-weight: 600; margin-bottom: 8px; color: #111; }
+    .files { display: flex; gap: 8px; flex-wrap: wrap; }
+    .file-link { display: inline-block; padding: 5px 12px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; color: #4338ca; text-decoration: none; font-size: 0.85em; }
     .file-link:hover { background: #c7d2fe; }
-    .loading { color: #999; padding: 40px 0; text-align: center; }
-    .error { color: #dc2626; padding: 20px; background: #fef2f2; border-radius: 8px; }
-    .preview { max-width: 250px; margin-top: 10px; border-radius: 4px; border: 1px solid #ddd; }
+    .preview { max-width: 220px; margin-top: 8px; border-radius: 4px; border: 1px solid #ddd; }
+    .summary-item { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 10px 16px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .summary-name { font-weight: 500; color: #111; }
+    .summary-gpu { font-family: monospace; font-size: 0.95em; color: #2563eb; font-weight: 600; }
+    .loading { color: #999; padding: 30px 0; text-align: center; }
+    .error { color: #dc2626; padding: 16px; background: #fef2f2; border-radius: 8px; font-size: 0.9em; }
+    @media (max-width: 700px) { .columns { flex-direction: column; } }
   </style>
 </head>
 <body>
   <h1>Scene Test Automation</h1>
-  <p class="subtitle">All runs — newest first</p>
-  <div id="content"><p class="loading">Loading runs...</p></div>
+  <p class="subtitle">Test results dashboard</p>
+
+  <div class="columns">
+    <div class="column">
+      <h2>📁 Test Runs</h2>
+      <div id="runs"><p class="loading">Loading runs...</p></div>
+    </div>
+    <div class="column">
+      <h2>📊 GPU Summary</h2>
+      <div id="summary"><p class="loading">Loading summary...</p></div>
+    </div>
+  </div>
 
   <script>
     const REPO_OWNER = "TheTripleL123";
     const REPO_NAME = "Scene-Test-Automation";
     const BRANCH = "main";
 
-    const API = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/runs?ref=${BRANCH}`;
+    const API_BASE = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents`;
     const RAW = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
 
     const FRIENDLY_NAMES = {
-      "APP_TIME_GRAPH.png": "🖼️ App Time Graph",
-      "HEADSET_RECORDING.mp4": "🎬 Headset Recording",
-      "CSV_REPORT.csv": "📊 CSV Report"
+      "APP_TIME_GRAPH.png": "🖼️ Graph",
+      "HEADSET_RECORDING.mp4": "🎬 Recording",
+      "CSV_REPORT.csv": "📊 CSV"
     };
 
-    async function load() {
-      const container = document.getElementById("content");
+    async function loadRuns() {
+      const container = document.getElementById("runs");
       try {
-        const res = await fetch(API);
-        if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+        const res = await fetch(`${API_BASE}/runs?ref=${BRANCH}`);
+        if (!res.ok) throw new Error(`API returned ${res.status}`);
         const folders = await res.json();
-
         folders.sort((a, b) => b.name.localeCompare(a.name));
 
         if (folders.length === 0) {
@@ -68,21 +84,47 @@
             html += `<a class="file-link" href="${url}" target="_blank">${label}</a>`;
             if (file.name.endsWith(".png")) pngUrl = url;
           }
-
           html += `</div>`;
           if (pngUrl) {
-            html += `<img class="preview" src="${pngUrl}" alt="App Time Graph" loading="lazy">`;
+            html += `<img class="preview" src="${pngUrl}" alt="Graph" loading="lazy">`;
           }
           html += `</div>`;
         }
-
         container.innerHTML = html;
       } catch (err) {
-        container.innerHTML = `<div class="error">Failed to load: ${err.message}<br>Make sure the "runs" folder exists in the repo.</div>`;
+        container.innerHTML = `<div class="error">Failed to load runs: ${err.message}</div>`;
       }
     }
 
-    load();
+    async function loadSummary() {
+      const container = document.getElementById("summary");
+      try {
+        const res = await fetch(`${RAW}/summary.json?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`Could not load summary.json (${res.status})`);
+        const entries = await res.json();
+
+        if (entries.length === 0) {
+          container.innerHTML = '<p class="loading">No entries yet.</p>';
+          return;
+        }
+
+        // Show newest first
+        const reversed = [...entries].reverse();
+        let html = "";
+        for (const entry of reversed) {
+          html += `<div class="summary-item">`;
+          html += `<span class="summary-name">${entry.name}</span>`;
+          html += `<span class="summary-gpu">${entry.avg_gpu}</span>`;
+          html += `</div>`;
+        }
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<div class="error">Failed to load summary: ${err.message}</div>`;
+      }
+    }
+
+    loadRuns();
+    loadSummary();
   </script>
 </body>
 </html>
