@@ -1,1 +1,6 @@
-[]
+[
+  {
+    "name": "GPU TEST - Name({TestName}) - Started at( 03-03-26_21-16 )",
+    "avg_gpu": "5339.0"
+  }
+]
