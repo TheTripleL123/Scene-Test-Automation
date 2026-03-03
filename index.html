@@ -88,20 +88,6 @@
     async function load() {
       const container = document.getElementById("content");
 
-      // Load summary
-      let summaryEntries = [];
-      try {
-        const sRes = await fetch(`${RAW}/summary.json?t=${Date.now()}`);
-        if (sRes.ok) {
-          const text = await sRes.text();
-          const trimmed = text.trim();
-          if (trimmed && trimmed !== "[]") {
-            summaryEntries = JSON.parse(trimmed);
-          }
-        }
-      } catch (e) {}
-
-      // Load run folders
       try {
         const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`);
         if (res.status === 404) {
@@ -124,9 +110,17 @@
           const filesRes = await fetch(folder.url);
           const files = await filesRes.json();
 
-          const summaryEntry = summaryEntries.find(e => e.name === folder.name);
-          const driveLink = summaryEntry ? summaryEntry.drive_link : null;
-          const avgGpu = summaryEntry ? summaryEntry.avg_gpu : "—";
+          // Load metadata.json from the folder
+          let avgGpu = "—";
+          let driveLink = null;
+          try {
+            const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/metadata.json?t=${Date.now()}`);
+            if (metaRes.ok) {
+              const meta = JSON.parse((await metaRes.text()).trim());
+              avgGpu = meta.avg_gpu || "—";
+              driveLink = meta.drive_link || null;
+            }
+          } catch (e) {}
 
           html += `<div class="run">`;
           html += `<div class="run-left">`;
