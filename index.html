@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scene Test Automation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 24px; background: #f5f5f5; color: #333; }
+    h1 { margin-bottom: 8px; }
+    .subtitle { color: #888; margin-bottom: 24px; }
+    .run { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px 20px; margin-bottom: 12px; }
+    .run-header { font-weight: 600; margin-bottom: 10px; color: #111; }
+    .files { display: flex; gap: 10px; flex-wrap: wrap; }
+    .file-link { display: inline-block; padding: 6px 14px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; color: #4338ca; text-decoration: none; font-size: 0.9em; }
+    .file-link:hover { background: #c7d2fe; }
+    .loading { color: #999; padding: 40px 0; text-align: center; }
+    .error { color: #dc2626; padding: 20px; background: #fef2f2; border-radius: 8px; }
+    .preview { max-width: 250px; margin-top: 10px; border-radius: 4px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h1>Scene Test Automation</h1>
+  <p class="subtitle">All runs — newest first</p>
+  <div id="content"><p class="loading">Loading runs...</p></div>
+
+  <script>
+    const REPO_OWNER = "TheTripleL123";
+    const REPO_NAME = "Scene-Test-Automation";
+    const BRANCH = "main";
+
+    const API = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/runs?ref=${BRANCH}`;
+    const RAW = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
+
+    const FRIENDLY_NAMES = {
+      "APP_TIME_GRAPH.png": "🖼️ App Time Graph",
+      "HEADSET_RECORDING.mp4": "🎬 Headset Recording",
+      "CSV_REPORT.csv": "📊 CSV Report"
+    };
+
+    async function load() {
+      const container = document.getElementById("content");
+      try {
+        const res = await fetch(API);
+        if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+        const folders = await res.json();
+
+        folders.sort((a, b) => b.name.localeCompare(a.name));
+
+        if (folders.length === 0) {
+          container.innerHTML = '<p class="loading">No runs yet.</p>';
+          return;
+        }
+
+        let html = "";
+        for (const folder of folders) {
+          const filesRes = await fetch(folder.url);
+          const files = await filesRes.json();
+
+          html += `<div class="run">`;
+          html += `<div class="run-header">${folder.name}</div>`;
+          html += `<div class="files">`;
+
+          let pngUrl = null;
+          for (const file of files) {
+            const url = `${RAW}/runs/${folder.name}/${file.name}`;
+            const label = FRIENDLY_NAMES[file.name] || file.name;
+            html += `<a class="file-link" href="${url}" target="_blank">${label}</a>`;
+            if (file.name.endsWith(".png")) pngUrl = url;
+          }
+
+          html += `</div>`;
+          if (pngUrl) {
+            html += `<img class="preview" src="${pngUrl}" alt="App Time Graph" loading="lazy">`;
+          }
+          html += `</div>`;
+        }
+
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<div class="error">Failed to load: ${err.message}<br>Make sure the "runs" folder exists in the repo.</div>`;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
