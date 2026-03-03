@@ -17,6 +17,8 @@
     .files { display: flex; gap: 8px; flex-wrap: wrap; }
     .file-link { display: inline-block; padding: 5px 12px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 6px; color: #4338ca; text-decoration: none; font-size: 0.85em; }
     .file-link:hover { background: #c7d2fe; }
+    .file-link.drive { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .file-link.drive:hover { background: #bbf7d0; }
     .preview { max-width: 220px; margin-top: 8px; border-radius: 4px; border: 1px solid #ddd; }
     .summary-item { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 10px 16px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
     .summary-name { font-weight: 500; color: #111; }
@@ -33,11 +35,11 @@
 
   <div class="columns">
     <div class="column">
-      <h2>📁 All Test Runs</h2>
+      <h2>📁 Test Runs</h2>
       <div id="runs"><p class="loading">Loading runs...</p></div>
     </div>
     <div class="column">
-      <h2>📊 All GPU Summaries</h2>
+      <h2>📊 GPU Summary</h2>
       <div id="summary"><p class="loading">Loading summary...</p></div>
     </div>
   </div>
@@ -50,36 +52,46 @@
     const API_BASE = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents`;
     const RAW = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
 
-    const FRIENDLY_NAMES = {
-      "APP_TIME_GRAPH.png": "🖼️ Graph",
-      "HEADSET_RECORDING.mp4": "🎬 Recording",
-      "CSV_REPORT.csv": "📊 CSV"
-    };
-
     async function loadRuns() {
       const container = document.getElementById("runs");
       try {
         const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`);
         if (res.status === 404) {
-          container.innerHTML = '<p class="empty">No test runs yet. Files will appear here after the first automation run.</p>';
+          container.innerHTML = '<p class="empty">No test runs yet.</p>';
           return;
         }
         if (!res.ok) throw new Error(`API returned ${res.status}`);
         const items = await res.json();
 
-        // Filter out .gitkeep and non-folders
         const folders = items.filter(item => item.type === "dir");
         folders.sort((a, b) => b.name.localeCompare(a.name));
 
         if (folders.length === 0) {
-          container.innerHTML = '<p class="empty">No test runs yet. Files will appear here after the first automation run.</p>';
+          container.innerHTML = '<p class="empty">No test runs yet.</p>';
           return;
         }
+
+        // Load summary to get Drive links
+        let summaryEntries = [];
+        try {
+          const sRes = await fetch(`${RAW}/summary.json?t=${Date.now()}`);
+          if (sRes.ok) {
+            const text = await sRes.text();
+            const trimmed = text.trim();
+            if (trimmed && trimmed !== "[]") {
+              summaryEntries = JSON.parse(trimmed);
+            }
+          }
+        } catch (e) {}
 
         let html = "";
         for (const folder of folders) {
           const filesRes = await fetch(folder.url);
           const files = await filesRes.json();
+
+          // Find matching summary entry for Drive link
+          const summaryEntry = summaryEntries.find(e => e.name === folder.name);
+          const driveLink = summaryEntry ? summaryEntry.drive_link : null;
 
           html += `<div class="run">`;
           html += `<div class="run-header">${folder.name}</div>`;
@@ -87,11 +99,23 @@
 
           let pngUrl = null;
           for (const file of files) {
-            const url = `${RAW}/AllTestRuns/${folder.name}/${file.name}`;
-            const label = FRIENDLY_NAMES[file.name] || file.name;
-            html += `<a class="file-link" href="${url}" target="_blank">${label}</a>`;
-            if (file.name.endsWith(".png")) pngUrl = url;
+            const rawUrl = `${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/${file.name}`;
+
+            if (file.name.endsWith(".csv")) {
+              // CSV: download link
+              html += `<a class="file-link" href="${rawUrl}" download="${file.name}">📊 CSV</a>`;
+            } else if (file.name.endsWith(".png")) {
+              // PNG: open in new tab
+              pngUrl = rawUrl;
+              html += `<a class="file-link" href="${rawUrl}" target="_blank">🖼️ Graph</a>`;
+            }
           }
+
+          // MP4: link to Google Drive
+          if (driveLink) {
+            html += `<a class="file-link drive" href="${driveLink}" target="_blank">🎬 Recording (Drive)</a>`;
+          }
+
           html += `</div>`;
           if (pngUrl) {
             html += `<img class="preview" src="${pngUrl}" alt="Graph" loading="lazy">`;
@@ -113,7 +137,7 @@
         const trimmed = text.trim();
 
         if (!trimmed || trimmed === "[]") {
-          container.innerHTML = '<p class="empty">No entries yet. Summary will appear after the first automation run.</p>';
+          container.innerHTML = '<p class="empty">No entries yet.</p>';
           return;
         }
 
