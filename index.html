@@ -6,7 +6,7 @@
   <title>Scene Test Automation</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 0 auto; padding: 24px; background: #f5f5f5; color: #333; }
+    body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 24px; background: #f5f5f5; color: #333; }
     h1 { margin-bottom: 8px; }
     .subtitle { color: #888; margin-bottom: 24px; }
     .columns { display: flex; gap: 24px; align-items: flex-start; }
@@ -20,9 +20,9 @@
     .file-link.drive { background: #f0fdf4; border-color: #86efac; color: #166534; }
     .file-link.drive:hover { background: #bbf7d0; }
     .preview { max-width: 220px; margin-top: 8px; border-radius: 4px; border: 1px solid #ddd; }
-    .summary-item { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 10px 16px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .summary-name { font-weight: 500; color: #111; }
-    .summary-gpu { font-family: monospace; font-size: 0.95em; color: #2563eb; font-weight: 600; }
+    .summary-item { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 10px 16px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .summary-name { font-weight: 500; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .summary-gpu { font-family: monospace; font-size: 0.95em; color: #2563eb; font-weight: 600; white-space: nowrap; }
     .loading { color: #999; padding: 30px 0; text-align: center; }
     .error { color: #dc2626; padding: 16px; background: #fef2f2; border-radius: 8px; font-size: 0.9em; }
     .empty { color: #999; padding: 20px 0; text-align: center; font-style: italic; }
