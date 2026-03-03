@@ -23,6 +23,7 @@
     .summary-gpu { font-family: monospace; font-size: 0.95em; color: #2563eb; font-weight: 600; }
     .loading { color: #999; padding: 30px 0; text-align: center; }
     .error { color: #dc2626; padding: 16px; background: #fef2f2; border-radius: 8px; font-size: 0.9em; }
+    .empty { color: #999; padding: 20px 0; text-align: center; font-style: italic; }
     @media (max-width: 700px) { .columns { flex-direction: column; } }
   </style>
 </head>
@@ -32,11 +33,11 @@
 
   <div class="columns">
     <div class="column">
-      <h2>📁 Test Runs</h2>
+      <h2>📁 All Test Runs</h2>
       <div id="runs"><p class="loading">Loading runs...</p></div>
     </div>
     <div class="column">
-      <h2>📊 GPU Summary</h2>
+      <h2>📊 All GPU Summaries</h2>
       <div id="summary"><p class="loading">Loading summary...</p></div>
     </div>
   </div>
@@ -58,13 +59,20 @@
     async function loadRuns() {
       const container = document.getElementById("runs");
       try {
-        const res = await fetch(`${API_BASE}/runs?ref=${BRANCH}`);
+        const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`);
+        if (res.status === 404) {
+          container.innerHTML = '<p class="empty">No test runs yet. Files will appear here after the first automation run.</p>';
+          return;
+        }
         if (!res.ok) throw new Error(`API returned ${res.status}`);
-        const folders = await res.json();
+        const items = await res.json();
+
+        // Filter out .gitkeep and non-folders
+        const folders = items.filter(item => item.type === "dir");
         folders.sort((a, b) => b.name.localeCompare(a.name));
 
         if (folders.length === 0) {
-          container.innerHTML = '<p class="loading">No runs yet.</p>';
+          container.innerHTML = '<p class="empty">No test runs yet. Files will appear here after the first automation run.</p>';
           return;
         }
 
@@ -101,14 +109,16 @@
       try {
         const res = await fetch(`${RAW}/summary.json?t=${Date.now()}`);
         if (!res.ok) throw new Error(`Could not load summary.json (${res.status})`);
-        const entries = await res.json();
+        const text = await res.text();
+        const trimmed = text.trim();
 
-        if (entries.length === 0) {
-          container.innerHTML = '<p class="loading">No entries yet.</p>';
+        if (!trimmed || trimmed === "[]") {
+          container.innerHTML = '<p class="empty">No entries yet. Summary will appear after the first automation run.</p>';
           return;
         }
 
-        // Show newest first
+        const entries = JSON.parse(trimmed);
+
         const reversed = [...entries].reverse();
         let html = "";
         for (const entry of reversed) {
