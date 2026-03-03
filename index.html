@@ -19,9 +19,9 @@
     .file-link.drive { background: #122117; border-color: #2ea04f; color: #56d364; }
     .file-link.drive:hover { background: #1a3326; }
 
-    .gpu-box { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 8px; padding: 14px 20px; text-align: center; flex-shrink: 0; }
-    .gpu-label { font-size: 0.8em; color: #7d8590; margin-bottom: 4px; }
-    .gpu-value { font-family: monospace; font-size: 1.4em; color: #79c0ff; font-weight: 700; }
+    .gpu-box { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 8px; padding: 16px 24px; text-align: center; flex-shrink: 0; }
+    .gpu-label { font-size: 0.85em; color: #7d8590; margin-bottom: 4px; }
+    .gpu-value { font-family: monospace; font-size: 2.2em; color: #79c0ff; font-weight: 700; }
 
     .loading { color: #7d8590; padding: 40px 0; text-align: center; font-size: 1em; }
     .error { color: #f85149; padding: 16px; background: #2d1215; border: 1px solid #f8514933; border-radius: 8px; font-size: 0.9em; }
@@ -32,6 +32,22 @@
     .overlay.active { display: flex; }
     .overlay img { max-width: 90%; max-height: 90%; border-radius: 8px; cursor: default; }
     .overlay-close { position: fixed; top: 20px; right: 30px; color: #fff; font-size: 2em; cursor: pointer; z-index: 1001; }
+
+    .delete-btn { background: none; border: none; color: #7d8590; font-size: 1.4em; cursor: pointer; padding: 8px; border-radius: 6px; transition: color 0.2s, background 0.2s; flex-shrink: 0; }
+    .delete-btn:hover { color: #f85149; background: #2d1215; }
+
+    /* Confirm popup */
+    .confirm-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
+    .confirm-overlay.active { display: flex; }
+    .confirm-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 28px 32px; text-align: center; max-width: 420px; }
+    .confirm-box p { margin-bottom: 8px; font-size: 1.05em; color: #e6edf3; }
+    .confirm-box .confirm-name { font-weight: 600; color: #f85149; word-break: break-all; margin-bottom: 20px; font-size: 0.9em; }
+    .confirm-buttons { display: flex; gap: 12px; justify-content: center; }
+    .confirm-buttons button { padding: 8px 24px; border-radius: 6px; border: none; font-size: 0.95em; cursor: pointer; font-weight: 600; }
+    .btn-cancel { background: #30363d; color: #e6edf3; }
+    .btn-cancel:hover { background: #484f58; }
+    .btn-delete { background: #da3633; color: #fff; }
+    .btn-delete:hover { background: #f85149; }
 
     @media (max-width: 700px) {
       .run { flex-direction: column; align-items: flex-start; }
@@ -48,6 +64,18 @@
   <div class="overlay" id="overlay" onclick="closePopup()">
     <span class="overlay-close" onclick="closePopup()">&times;</span>
     <img id="popup-img" src="" alt="Graph" onclick="event.stopPropagation()">
+  </div>
+
+  <!-- Confirm delete popup -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <p>Are you sure you want to delete this test?</p>
+      <div class="confirm-name" id="confirmName"></div>
+      <div class="confirm-buttons">
+        <button class="btn-cancel" onclick="cancelDelete()">Cancel</button>
+        <button class="btn-delete" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -71,6 +99,62 @@
     document.addEventListener("keydown", function(e) {
       if (e.key === "Escape") closePopup();
     });
+
+    // --- Delete functions ---
+    const GITHUB_TOKEN = "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";
+    const GITHUB_HEADERS = GITHUB_TOKEN ? {
+      "Authorization": `Bearer ${GITHUB_TOKEN}`,
+      "Accept": "application/vnd.github+json"
+    } : null;
+
+    let pendingDeleteFolder = null;
+
+    function askDelete(folderName) {
+      if (!GITHUB_TOKEN) {
+        alert("Delete is not enabled. Add your GitHub token to index.html to enable it.");
+        return;
+      }
+      pendingDeleteFolder = folderName;
+      document.getElementById("confirmName").textContent = folderName;
+      document.getElementById("confirmOverlay").classList.add("active");
+    }
+
+    function cancelDelete() {
+      pendingDeleteFolder = null;
+      document.getElementById("confirmOverlay").classList.remove("active");
+    }
+
+    async function confirmDelete() {
+      if (!pendingDeleteFolder) return;
+      const folderName = pendingDeleteFolder;
+      cancelDelete();
+
+      try {
+        // Get all files in the folder
+        const res = await fetch(`${API_BASE}/AllTestRuns/${encodeURIComponent(folderName)}?ref=${BRANCH}`, { headers: GITHUB_HEADERS });
+        if (!res.ok) throw new Error("Could not list folder contents");
+        const files = await res.json();
+
+        // Delete each file
+        for (const file of files) {
+          const delRes = await fetch(`${API_BASE}/AllTestRuns/${encodeURIComponent(folderName)}/${file.name}`, {
+            method: "DELETE",
+            headers: { ...GITHUB_HEADERS, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: `Delete ${folderName}/${file.name}`,
+              sha: file.sha,
+              branch: BRANCH
+            })
+          });
+          if (!delRes.ok) throw new Error(`Failed to delete ${file.name}`);
+        }
+
+        // Reload the page
+        load();
+      } catch (err) {
+        alert("Delete failed: " + err.message);
+      }
+    }
 
     function forceDownload(url, filename) {
       fetch(url)
@@ -145,6 +229,8 @@
           html += `<div class="gpu-label">Average GPU</div>`;
           html += `<div class="gpu-value">${avgGpu}</div>`;
           html += `</div>`;
+
+          html += `<button class="delete-btn" title="Delete test" onclick="askDelete('${folder.name.replace(/'/g, "\\'")}')">🗑️</button>`;
 
           html += `</div>`;
         }
