@@ -100,12 +100,15 @@
       if (e.key === "Escape") closePopup();
     });
 
-    // --- Auth for all requests (needed for private repo) ---
-    const GITHUB_TOKEN = "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";
-    const AUTH_HEADERS = {
-      "Authorization": `Bearer ${GITHUB_TOKEN}`,
-      "Accept": "application/vnd.github+json"
-    };
+    // --- Auth ---
+    // Token is NOT stored in the repo. User enters it once per session to enable delete.
+    let GITHUB_TOKEN = sessionStorage.getItem("gh_token") || "";
+    function getAuthHeaders() {
+      return GITHUB_TOKEN ? {
+        "Authorization": `Bearer ${GITHUB_TOKEN}`,
+        "Accept": "application/vnd.github+json"
+      } : null;
+    }
 
     let pendingDeleteFolder = null;
 
@@ -163,7 +166,7 @@
     }
 
     function forceDownload(url, filename) {
-      fetch(url, { headers: AUTH_HEADERS })
+      fetch(url)
         .then(res => res.blob())
         .then(blob => {
           const a = document.createElement("a");
@@ -179,7 +182,7 @@
       const container = document.getElementById("content");
 
       try {
-        const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`, { headers: AUTH_HEADERS });
+        const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`);
         if (res.status === 404) {
           container.innerHTML = '<p class="empty">No test runs yet.</p>';
           return;
@@ -197,14 +200,14 @@
 
         let html = "";
         for (const folder of folders) {
-          const filesRes = await fetch(folder.url, { headers: AUTH_HEADERS });
+          const filesRes = await fetch(folder.url);
           const files = await filesRes.json();
 
           // Load metadata.json from the folder
           let avgGpu = "—";
           let driveLink = null;
           try {
-            const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/metadata.json?t=${Date.now()}`, { headers: AUTH_HEADERS });
+            const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/metadata.json?t=${Date.now()}`);
             if (metaRes.ok) {
               const meta = JSON.parse((await metaRes.text()).trim());
               avgGpu = meta.avg_gpu || "—";
@@ -235,8 +238,6 @@
           html += `<div class="gpu-label">Average GPU</div>`;
           html += `<div class="gpu-value">${avgGpu}</div>`;
           html += `</div>`;
-
-          html += `<button class="delete-btn" title="Delete test" onclick="askDelete('${folder.name.replace(/'/g, "\\'")}')">🗑</button>`;
 
           html += `</div>`;
         }
