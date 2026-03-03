@@ -7,8 +7,8 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 32px; background: #0d1117; color: #e6edf3; font-size: 16px; }
-    h1 { margin-bottom: 6px; color: #f0f6fc; font-size: 1.8em; }
-    .subtitle { color: #7d8590; margin-bottom: 28px; font-size: 1em; }
+    h1 { margin-bottom: 6px; color: #f0f6fc; font-size: 1.8em; padding-bottom: 12px; border-bottom: 2px solid #30363d; }
+    .subtitle { color: #7d8590; margin-bottom: 28px; font-size: 1em; margin-top: 8px; }
 
     .run { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
     .run-left { flex: 1; min-width: 0; }
@@ -33,7 +33,7 @@
     .overlay img { max-width: 90%; max-height: 90%; border-radius: 8px; cursor: default; }
     .overlay-close { position: fixed; top: 20px; right: 30px; color: #fff; font-size: 2em; cursor: pointer; z-index: 1001; }
 
-    .delete-btn { background: none; border: none; color: #7d8590; font-size: 1.4em; cursor: pointer; padding: 8px; border-radius: 6px; transition: color 0.2s, background 0.2s; flex-shrink: 0; }
+    .delete-btn { background: none; border: none; color: #7d8590; font-size: 2.2em; cursor: pointer; padding: 0; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: color 0.2s, background 0.2s; flex-shrink: 0; }
     .delete-btn:hover { color: #ff6b6b; background: #4a1a1a; }
 
     /* Confirm popup */
