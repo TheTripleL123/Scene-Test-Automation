@@ -100,12 +100,12 @@
       if (e.key === "Escape") closePopup();
     });
 
-    // --- Delete functions ---
-    const GITHUB_TOKEN = "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";
-    const GITHUB_HEADERS = GITHUB_TOKEN ? {
+    // --- Auth for all requests (needed for private repo) ---
+    const GITHUB_TOKEN = "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";
+    const AUTH_HEADERS = {
       "Authorization": `Bearer ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github+json"
-    } : null;
+    };
 
     let pendingDeleteFolder = null;
 
@@ -133,7 +133,7 @@
         const encoded = encodeURIComponent(folderName);
         // Get all files in the folder — use auth headers
         const res = await fetch(`${API_BASE}/AllTestRuns/${encoded}?ref=${BRANCH}`, {
-          headers: GITHUB_HEADERS
+          headers: AUTH_HEADERS
         });
         if (!res.ok) throw new Error("Could not list folder contents (" + res.status + ")");
         const files = await res.json();
@@ -142,7 +142,7 @@
         for (const file of files) {
           const delRes = await fetch(`${API_BASE}/AllTestRuns/${encoded}/${encodeURIComponent(file.name)}`, {
             method: "DELETE",
-            headers: { ...GITHUB_HEADERS, "Content-Type": "application/json" },
+            headers: { ...AUTH_HEADERS, "Content-Type": "application/json" },
             body: JSON.stringify({
               message: `Delete ${folderName}/${file.name}`,
               sha: file.sha,
@@ -163,7 +163,7 @@
     }
 
     function forceDownload(url, filename) {
-      fetch(url)
+      fetch(url, { headers: AUTH_HEADERS })
         .then(res => res.blob())
         .then(blob => {
           const a = document.createElement("a");
@@ -179,7 +179,7 @@
       const container = document.getElementById("content");
 
       try {
-        const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`);
+        const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`, { headers: AUTH_HEADERS });
         if (res.status === 404) {
           container.innerHTML = '<p class="empty">No test runs yet.</p>';
           return;
@@ -197,14 +197,14 @@
 
         let html = "";
         for (const folder of folders) {
-          const filesRes = await fetch(folder.url);
+          const filesRes = await fetch(folder.url, { headers: AUTH_HEADERS });
           const files = await filesRes.json();
 
           // Load metadata.json from the folder
           let avgGpu = "—";
           let driveLink = null;
           try {
-            const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/metadata.json?t=${Date.now()}`);
+            const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/metadata.json?t=${Date.now()}`, { headers: AUTH_HEADERS });
             if (metaRes.ok) {
               const meta = JSON.parse((await metaRes.text()).trim());
               avgGpu = meta.avg_gpu || "—";
