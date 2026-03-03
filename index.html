@@ -79,7 +79,7 @@
 
           let pngUrl = null;
           for (const file of files) {
-            const url = `${RAW}/runs/${folder.name}/${file.name}`;
+            const url = `${RAW}/AllTestRuns/${folder.name}/${file.name}`;
             const label = FRIENDLY_NAMES[file.name] || file.name;
             html += `<a class="file-link" href="${url}" target="_blank">${label}</a>`;
             if (file.name.endsWith(".png")) pngUrl = url;
