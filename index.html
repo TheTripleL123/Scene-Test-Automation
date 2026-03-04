@@ -31,11 +31,11 @@
     .run { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
     .run-left { flex: 1; min-width: 0; }
     .run-title { font-weight: 700; font-size: 1.4em; color: #f0f6fc; margin-bottom: 8px; }
-    .run-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
-    .meta-tag { font-size: 0.8em; padding: 3px 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #7d8590; }
-    .meta-tag span { color: #e6edf3; }
-    .files { display: flex; gap: 10px; flex-wrap: wrap; }
-    .file-link { display: inline-block; padding: 6px 14px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; color: #79c0ff; text-decoration: none; font-size: 0.9em; cursor: pointer; }
+    .run-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 14px; }
+    .meta-tag { font-size: 0.95em; padding: 5px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 5px; color: #7d8590; }
+    .meta-tag span { color: #e6edf3; font-weight: 500; }
+    .files { display: flex; gap: 14px; flex-wrap: wrap; }
+    .file-link { display: inline-block; padding: 8px 18px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; color: #79c0ff; text-decoration: none; font-size: 0.95em; cursor: pointer; }
     .file-link:hover { background: #2d3a54; }
     .file-link.drive { background: #122117; border-color: #2ea04f; color: #56d364; }
     .file-link.drive:hover { background: #1a3326; }
@@ -68,11 +68,11 @@
   <div class="controls">
     <div class="control-group">
       <label>Search by Name</label>
-      <input type="text" id="searchName" placeholder="e.g. MainMenu" oninput="applyFilters()">
+      <input type="text" id="searchName" placeholder="e.g. texture test" oninput="applyFilters()">
     </div>
     <div class="control-group">
       <label>Search by Scene</label>
-      <input type="text" id="searchScene" placeholder="e.g. Arena" oninput="applyFilters()">
+      <input type="text" id="searchScene" placeholder="e.g. Rampage arena" oninput="applyFilters()">
     </div>
     <div class="control-group">
       <label>Search by Timestamp</label>
@@ -186,9 +186,16 @@
         if (sortBy === "avg_gpu") {
           valA = parseFloat(a.avg_gpu) || 0;
           valB = parseFloat(b.avg_gpu) || 0;
+          // Push "—" (0) to bottom
+          if (valA === 0 && valB !== 0) return 1;
+          if (valB === 0 && valA !== 0) return -1;
         } else {
           valA = (a[sortBy] || "").toLowerCase();
           valB = (b[sortBy] || "").toLowerCase();
+          // Push "-" to bottom
+          if (valA === "-" && valB !== "-") return 1;
+          if (valB === "-" && valA !== "-") return -1;
+          if (valA === "-" && valB === "-") return 0;
         }
         if (valA < valB) return sortAscending ? -1 : 1;
         if (valA > valB) return sortAscending ? 1 : -1;
