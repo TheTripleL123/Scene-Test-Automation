@@ -8,11 +8,32 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 32px; background: #0d1117; color: #e6edf3; font-size: 16px; }
     h1 { margin-bottom: 6px; color: #f0f6fc; font-size: 1.8em; padding-bottom: 12px; border-bottom: 2px solid #30363d; }
-    .subtitle { color: #7d8590; margin-bottom: 28px; font-size: 1em; margin-top: 8px; }
+    .subtitle { color: #7d8590; margin-bottom: 20px; font-size: 1em; margin-top: 8px; }
+    .subtitle a { color: #79c0ff; text-decoration: none; }
+    .subtitle a:hover { text-decoration: underline; }
 
+    /* Controls bar */
+    .controls { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+    .control-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+    .control-group label { font-size: 0.75em; color: #7d8590; text-transform: uppercase; letter-spacing: 0.05em; }
+    .control-group input, .control-group select { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #e6edf3; font-size: 0.9em; outline: none; }
+    .control-group input:focus, .control-group select:focus { border-color: #58a6ff; }
+    .control-group input::placeholder { color: #484f58; }
+    .sort-group { display: flex; flex-direction: column; gap: 4px; min-width: 200px; }
+    .sort-group label { font-size: 0.75em; color: #7d8590; text-transform: uppercase; letter-spacing: 0.05em; }
+    .sort-row { display: flex; gap: 6px; }
+    .sort-row select { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #e6edf3; font-size: 0.9em; outline: none; flex: 1; }
+    .sort-row select:focus { border-color: #58a6ff; }
+    .sort-row button { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; padding: 8px 12px; color: #79c0ff; cursor: pointer; font-size: 0.9em; }
+    .sort-row button:hover { background: #2d3a54; }
+
+    /* Test cards */
     .run { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
     .run-left { flex: 1; min-width: 0; }
-    .run-title { font-weight: 700; font-size: 1.4em; color: #f0f6fc; margin-bottom: 10px; }
+    .run-title { font-weight: 700; font-size: 1.4em; color: #f0f6fc; margin-bottom: 8px; }
+    .run-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+    .meta-tag { font-size: 0.8em; padding: 3px 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #7d8590; }
+    .meta-tag span { color: #e6edf3; }
     .files { display: flex; gap: 10px; flex-wrap: wrap; }
     .file-link { display: inline-block; padding: 6px 14px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; color: #79c0ff; text-decoration: none; font-size: 0.9em; cursor: pointer; }
     .file-link:hover { background: #2d3a54; }
@@ -33,31 +54,44 @@
     .overlay img { max-width: 90%; max-height: 90%; border-radius: 8px; cursor: default; }
     .overlay-close { position: fixed; top: 20px; right: 30px; color: #fff; font-size: 2em; cursor: pointer; z-index: 1001; }
 
-    .delete-btn { background: none; border: none; color: #7d8590; font-size: 2.2em; cursor: pointer; padding: 0; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: color 0.2s, background 0.2s; flex-shrink: 0; }
-    .delete-btn:hover { color: #ff6b6b; background: #4a1a1a; }
-
-    /* Confirm popup */
-    .confirm-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; }
-    .confirm-overlay.active { display: flex; }
-    .confirm-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 28px 32px; text-align: center; max-width: 420px; }
-    .confirm-box p { margin-bottom: 8px; font-size: 1.05em; color: #e6edf3; }
-    .confirm-box .confirm-name { font-weight: 600; color: #f85149; word-break: break-all; margin-bottom: 20px; font-size: 0.9em; }
-    .confirm-buttons { display: flex; gap: 12px; justify-content: center; }
-    .confirm-buttons button { padding: 8px 24px; border-radius: 6px; border: none; font-size: 0.95em; cursor: pointer; font-weight: 600; }
-    .btn-cancel { background: #30363d; color: #e6edf3; }
-    .btn-cancel:hover { background: #484f58; }
-    .btn-delete { background: #da3633; color: #fff; }
-    .btn-delete:hover { background: #f85149; }
-
     @media (max-width: 700px) {
       .run { flex-direction: column; align-items: flex-start; }
       .gpu-box { width: 100%; }
+      .controls { flex-direction: column; }
     }
   </style>
 </head>
 <body>
   <h1>Scene Test Automation</h1>
-  <p class="subtitle">Test results dashboard — <a href="https://drive.google.com/drive/u/5/folders/1Ckhix2o8tbz3VA6i25UQ1jf7JKx5bkQD" target="_blank" style="color: #79c0ff; text-decoration: none;">📂 Google Drive Folder</a></p>
+  <p class="subtitle">Test results dashboard — <a href="https://drive.google.com/drive/u/5/folders/1Ckhix2o8tbz3VA6i25UQ1jf7JKx5bkQD" target="_blank">📂 Google Drive Folder</a></p>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Search by Name</label>
+      <input type="text" id="searchName" placeholder="e.g. MainMenu" oninput="applyFilters()">
+    </div>
+    <div class="control-group">
+      <label>Search by Scene</label>
+      <input type="text" id="searchScene" placeholder="e.g. Arena" oninput="applyFilters()">
+    </div>
+    <div class="control-group">
+      <label>Search by Timestamp</label>
+      <input type="text" id="searchTime" placeholder="e.g. 03-03-26" oninput="applyFilters()">
+    </div>
+    <div class="sort-group">
+      <label>Sort by</label>
+      <div class="sort-row">
+        <select id="sortBy" onchange="applyFilters()">
+          <option value="timestamp">Timestamp</option>
+          <option value="test_name">Name</option>
+          <option value="scene_name">Scene</option>
+          <option value="avg_gpu">Average GPU</option>
+        </select>
+        <button id="sortDir" onclick="toggleSort()">↓ Newest</button>
+      </div>
+    </div>
+  </div>
+
   <div id="content"><p class="loading">Loading...</p></div>
 
   <!-- Image popup -->
@@ -74,6 +108,9 @@
     const API_BASE = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents`;
     const RAW = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
 
+    let allRuns = []; // Stores all loaded run data
+    let sortAscending = false; // false = newest/descending first
+
     function openPopup(url) {
       document.getElementById("popup-img").src = url;
       document.getElementById("overlay").classList.add("active");
@@ -88,71 +125,6 @@
       if (e.key === "Escape") closePopup();
     });
 
-    // --- Auth ---
-    // Token is NOT stored in the repo. User enters it once per session to enable delete.
-    let GITHUB_TOKEN = sessionStorage.getItem("gh_token") || "";
-    function getAuthHeaders() {
-      return GITHUB_TOKEN ? {
-        "Authorization": `Bearer ${GITHUB_TOKEN}`,
-        "Accept": "application/vnd.github+json"
-      } : null;
-    }
-
-    let pendingDeleteFolder = null;
-
-    function askDelete(folderName) {
-      if (!GITHUB_TOKEN) {
-        alert("Delete is not enabled. Add your GitHub token to index.html to enable it.");
-        return;
-      }
-      pendingDeleteFolder = folderName;
-      document.getElementById("confirmName").textContent = folderName;
-      document.getElementById("confirmOverlay").classList.add("active");
-    }
-
-    function cancelDelete() {
-      pendingDeleteFolder = null;
-      document.getElementById("confirmOverlay").classList.remove("active");
-    }
-
-    async function confirmDelete() {
-      if (!pendingDeleteFolder) return;
-      const folderName = pendingDeleteFolder;
-      cancelDelete();
-
-      try {
-        const encoded = encodeURIComponent(folderName);
-        // Get all files in the folder — use auth headers
-        const res = await fetch(`${API_BASE}/AllTestRuns/${encoded}?ref=${BRANCH}`, {
-          headers: AUTH_HEADERS
-        });
-        if (!res.ok) throw new Error("Could not list folder contents (" + res.status + ")");
-        const files = await res.json();
-
-        // Delete each file one by one
-        for (const file of files) {
-          const delRes = await fetch(`${API_BASE}/AllTestRuns/${encoded}/${encodeURIComponent(file.name)}`, {
-            method: "DELETE",
-            headers: { ...AUTH_HEADERS, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message: `Delete ${folderName}/${file.name}`,
-              sha: file.sha,
-              branch: BRANCH
-            })
-          });
-          if (!delRes.ok) {
-            const errBody = await delRes.text();
-            throw new Error(`Failed to delete ${file.name}: ${delRes.status} ${errBody}`);
-          }
-        }
-
-        // Reload
-        load();
-      } catch (err) {
-        alert("Delete failed: " + err.message);
-      }
-    }
-
     function forceDownload(url, filename) {
       fetch(url)
         .then(res => res.blob())
@@ -164,6 +136,111 @@
           URL.revokeObjectURL(a.href);
         })
         .catch(err => alert("Download failed: " + err.message));
+    }
+
+    function toggleSort() {
+      sortAscending = !sortAscending;
+      const btn = document.getElementById("sortDir");
+      const sortBy = document.getElementById("sortBy").value;
+      if (sortBy === "avg_gpu") {
+        btn.textContent = sortAscending ? "↑ Low first" : "↓ High first";
+      } else {
+        btn.textContent = sortAscending ? "↑ Oldest" : "↓ Newest";
+      }
+      applyFilters();
+    }
+
+    function updateSortLabel() {
+      const btn = document.getElementById("sortDir");
+      const sortBy = document.getElementById("sortBy").value;
+      if (sortBy === "avg_gpu") {
+        btn.textContent = sortAscending ? "↑ Low first" : "↓ High first";
+      } else if (sortBy === "timestamp") {
+        btn.textContent = sortAscending ? "↑ Oldest" : "↓ Newest";
+      } else {
+        btn.textContent = sortAscending ? "↑ A→Z" : "↓ Z→A";
+      }
+    }
+
+    // Update label when sort dropdown changes
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("sortBy").addEventListener("change", updateSortLabel);
+    });
+
+    function applyFilters() {
+      updateSortLabel();
+      const nameQuery = document.getElementById("searchName").value.toLowerCase();
+      const sceneQuery = document.getElementById("searchScene").value.toLowerCase();
+      const timeQuery = document.getElementById("searchTime").value.toLowerCase();
+      const sortBy = document.getElementById("sortBy").value;
+
+      let filtered = allRuns.filter(r => {
+        if (nameQuery && !r.test_name.toLowerCase().includes(nameQuery)) return false;
+        if (sceneQuery && !r.scene_name.toLowerCase().includes(sceneQuery)) return false;
+        if (timeQuery && !r.timestamp.toLowerCase().includes(timeQuery)) return false;
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        let valA, valB;
+        if (sortBy === "avg_gpu") {
+          valA = parseFloat(a.avg_gpu) || 0;
+          valB = parseFloat(b.avg_gpu) || 0;
+        } else {
+          valA = (a[sortBy] || "").toLowerCase();
+          valB = (b[sortBy] || "").toLowerCase();
+        }
+        if (valA < valB) return sortAscending ? -1 : 1;
+        if (valA > valB) return sortAscending ? 1 : -1;
+        return 0;
+      });
+
+      renderRuns(filtered);
+    }
+
+    function renderRuns(runs) {
+      const container = document.getElementById("content");
+
+      if (runs.length === 0) {
+        container.innerHTML = '<p class="empty">No matching tests found.</p>';
+        return;
+      }
+
+      let html = "";
+      for (const r of runs) {
+        html += `<div class="run">`;
+        html += `<div class="run-left">`;
+        html += `<div class="run-title">${r.folder_name}</div>`;
+        html += `<div class="run-meta">`;
+        html += `<div class="meta-tag">Name: <span>${r.test_name}</span></div>`;
+        html += `<div class="meta-tag">Scene: <span>${r.scene_name}</span></div>`;
+        html += `<div class="meta-tag">Started: <span>${r.timestamp}</span></div>`;
+        html += `</div>`;
+        html += `<div class="files">`;
+
+        for (const file of r.files) {
+          const rawUrl = `${RAW}/AllTestRuns/${encodeURIComponent(r.folder_name)}/${file.name}`;
+          if (file.name.endsWith(".csv")) {
+            html += `<a class="file-link" href="#" onclick="forceDownload('${rawUrl}', '${file.name}'); return false;">📊 CSV Report</a>`;
+          } else if (file.name.endsWith(".png")) {
+            html += `<a class="file-link" href="#" onclick="openPopup('${rawUrl}'); return false;">🖼️ GPU Graph</a>`;
+          }
+        }
+        if (r.drive_link) {
+          html += `<a class="file-link drive" href="${r.drive_link}" target="_blank">📂 Drive Folder</a>`;
+        }
+        html += `</div>`;
+        html += `</div>`;
+
+        html += `<div class="gpu-box">`;
+        html += `<div class="gpu-label">AVERAGE GPU</div>`;
+        html += `<div class="gpu-value">${r.avg_gpu}</div>`;
+        html += `</div>`;
+
+        html += `</div>`;
+      }
+
+      container.innerHTML = html;
     }
 
     async function load() {
@@ -179,59 +256,49 @@
         const items = await res.json();
 
         const folders = items.filter(item => item.type === "dir");
-        // Reverse to show newest first (GitHub API returns oldest first)
-        folders.reverse();
 
         if (folders.length === 0) {
           container.innerHTML = '<p class="empty">No test runs yet.</p>';
           return;
         }
 
-        let html = "";
+        allRuns = [];
         for (const folder of folders) {
           const filesRes = await fetch(folder.url);
           const files = await filesRes.json();
 
-          // Load metadata.json from the folder
           let avgGpu = "—";
           let driveLink = null;
+          let testName = "-";
+          let sceneName = "-";
+          let timestamp = "-";
+
           try {
             const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/metadata.json?t=${Date.now()}`);
             if (metaRes.ok) {
               const meta = JSON.parse((await metaRes.text()).trim());
               avgGpu = meta.avg_gpu || "—";
               driveLink = meta.drive_link || null;
+              testName = meta.test_name || "-";
+              sceneName = meta.scene_name || "-";
+              timestamp = meta.timestamp || "-";
             }
           } catch (e) {}
 
-          html += `<div class="run">`;
-          html += `<div class="run-left">`;
-          html += `<div class="run-title">${folder.name}</div>`;
-          html += `<div class="files">`;
-
-          for (const file of files) {
-            const rawUrl = `${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/${file.name}`;
-            if (file.name.endsWith(".csv")) {
-              html += `<a class="file-link" href="#" onclick="forceDownload('${rawUrl}', '${file.name}'); return false;">📊 CSV Report</a>`;
-            } else if (file.name.endsWith(".png")) {
-              html += `<a class="file-link" href="#" onclick="openPopup('${rawUrl}'); return false;">🖼️ GPU Graph</a>`;
-            }
-          }
-          if (driveLink) {
-            html += `<a class="file-link drive" href="${driveLink}" target="_blank">📂 Drive Folder</a>`;
-          }
-          html += `</div>`;
-          html += `</div>`;
-
-          html += `<div class="gpu-box">`;
-          html += `<div class="gpu-label">AVERAGE GPU</div>`;
-          html += `<div class="gpu-value">${avgGpu}</div>`;
-          html += `</div>`;
-
-          html += `</div>`;
+          allRuns.push({
+            folder_name: folder.name,
+            files: files.filter(f => !f.name.endsWith(".json")),
+            avg_gpu: avgGpu,
+            drive_link: driveLink,
+            test_name: testName,
+            scene_name: sceneName,
+            timestamp: timestamp,
+          });
         }
 
-        container.innerHTML = html;
+        // Default: newest first by reversing API order
+        allRuns.reverse();
+        applyFilters();
       } catch (err) {
         container.innerHTML = `<div class="error">Failed to load: ${err.message}</div>`;
       }
