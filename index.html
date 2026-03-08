@@ -115,7 +115,7 @@
 </head>
 <body>
   <h1>Scene Test Automation</h1>
-  <p class="subtitle">Test results dashboard — <a href="https://drive.google.com/drive/u/5/folders/1Ckhix2o8tbz3VA6i25UQ1jf7JKx5bkQD" target="_blank">Google Drive Folder</a></p>
+  <p class="subtitle">Test results dashboard — <a href="https://drive.google.com/drive/u/5/folders/1Ckhix2o8tbz3VA6i25UQ1jf7JKx5bkQD" target="_blank">&#128194; Google Drive Folder</a></p>
 
   <div class="controls">
     <div class="control-group">
@@ -310,13 +310,13 @@
         for (const file of r.files) {
           const rawUrl = `${RAW}/AllTestRuns/${encodeURIComponent(r.folder_name)}/${file.name}`;
           if (file.name.endsWith(".csv")) {
-            html += `<a class="file-link" href="#" onclick="forceDownload('${escAttr(rawUrl)}', '${escAttr(file.name)}'); return false;">CSV Report</a>`;
+            html += `<a class="file-link" href="#" onclick="forceDownload('${escAttr(rawUrl)}', '${escAttr(file.name)}'); return false;">&#128202; CSV Report</a>`;
           } else if (file.name === "APP_TIME_GRAPH.png") {
-            html += `<a class="file-link" href="#" onclick="openPopup('${escAttr(rawUrl)}'); return false;">GPU Graph</a>`;
+            html += `<a class="file-link" href="#" onclick="openPopup('${escAttr(rawUrl)}'); return false;">&#128248; GPU Graph</a>`;
           }
         }
         if (r.drive_link) {
-          html += `<a class="file-link drive" href="${escAttr(r.drive_link)}" target="_blank">Drive Folder</a>`;
+          html += `<a class="file-link drive" href="${escAttr(r.drive_link)}" target="_blank">&#128194; Drive Folder</a>`;
         }
         html += `</div></div>`; // close files + run-left
 
