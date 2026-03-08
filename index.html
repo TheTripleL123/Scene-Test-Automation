@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scene Test Automation</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 32px; background: #0d1117; color: #e6edf3; font-size: 16px; }
+    body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 32px; padding-bottom: 100px; background: #0d1117; color: #e6edf3; font-size: 16px; }
     h1 { margin-bottom: 6px; color: #f0f6fc; font-size: 1.8em; padding-bottom: 12px; border-bottom: 2px solid #30363d; }
     .subtitle { color: #7d8590; margin-bottom: 20px; font-size: 1em; margin-top: 8px; }
     .subtitle a { color: #79c0ff; text-decoration: none; }
@@ -24,46 +25,97 @@
     .sort-row { display: flex; gap: 6px; }
     .sort-row select { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #e6edf3; font-size: 0.9em; outline: none; flex: 1; }
     .sort-row select:focus { border-color: #58a6ff; }
-    .sort-row button { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; padding: 8px 12px; color: #79c0ff; cursor: pointer; font-size: 0.9em; }
+    .sort-row button { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; padding: 8px 12px; color: #79c0ff; cursor: pointer; font-size: 0.9em; white-space: nowrap; }
     .sort-row button:hover { background: #2d3a54; }
 
     /* Test cards */
-    .run { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .run { background: #161b22; border: 2px solid #30363d; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; transition: border-color 0.15s; }
+    .run.selected { border-color: #58a6ff; background: #161b2a; }
+    .run-checkbox { flex-shrink: 0; width: 22px; height: 22px; accent-color: #58a6ff; cursor: pointer; }
+    .run-body { flex: 1; min-width: 0; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
     .run-left { flex: 1; min-width: 0; }
-    .run-title { font-weight: 700; font-size: 1.4em; color: #f0f6fc; margin-bottom: 8px; }
-    .run-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 14px; }
-    .meta-tag { font-size: 0.95em; padding: 5px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 5px; color: #7d8590; }
+    .run-title { font-weight: 700; font-size: 1.3em; color: #f0f6fc; margin-bottom: 8px; word-break: break-word; }
+    .run-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+    .meta-tag { font-size: 0.9em; padding: 5px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 5px; color: #7d8590; }
     .meta-tag span { color: #e6edf3; font-weight: 500; }
-    .files { display: flex; gap: 14px; flex-wrap: wrap; }
-    .file-link { display: inline-block; padding: 8px 18px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; color: #79c0ff; text-decoration: none; font-size: 0.95em; cursor: pointer; }
+    .files { display: flex; gap: 10px; flex-wrap: wrap; }
+    .file-link { display: inline-block; padding: 7px 14px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; color: #79c0ff; text-decoration: none; font-size: 0.9em; cursor: pointer; }
     .file-link:hover { background: #2d3a54; }
     .file-link.drive { background: #122117; border-color: #2ea04f; color: #56d364; }
     .file-link.drive:hover { background: #1a3326; }
 
-    .gpu-box { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 8px; padding: 20px 32px; text-align: center; flex-shrink: 0; min-width: 180px; }
-    .gpu-label { font-size: 0.85em; color: #7d8590; margin-bottom: 6px; letter-spacing: 0.05em; }
-    .gpu-value { font-family: monospace; font-size: 2.6em; color: #79c0ff; font-weight: 700; }
+    .run-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+    .thumb-container { width: 120px; height: 80px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 1px solid #30363d; flex-shrink: 0; }
+    .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+    .gpu-box { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 8px; padding: 16px 28px; text-align: center; flex-shrink: 0; min-width: 150px; }
+    .gpu-label { font-size: 0.8em; color: #7d8590; margin-bottom: 4px; letter-spacing: 0.05em; }
+    .gpu-value { font-family: monospace; font-size: 2.2em; color: #79c0ff; font-weight: 700; }
 
     .loading { color: #7d8590; padding: 40px 0; text-align: center; font-size: 1em; }
     .error { color: #f85149; padding: 16px; background: #2d1215; border: 1px solid #f8514933; border-radius: 8px; font-size: 0.9em; }
     .empty { color: #7d8590; padding: 30px 0; text-align: center; font-style: italic; }
 
-    /* Popup overlay */
+    /* Image popup overlay */
     .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
     .overlay.active { display: flex; }
     .overlay img { max-width: 90%; max-height: 90%; border-radius: 8px; cursor: default; }
     .overlay-close { position: fixed; top: 20px; right: 30px; color: #fff; font-size: 2em; cursor: pointer; z-index: 1001; }
 
+    /* Compare bar (sticky bottom) */
+    .compare-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #161b22; border-top: 2px solid #58a6ff; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; z-index: 900; transform: translateY(100%); transition: transform 0.2s; }
+    .compare-bar.visible { transform: translateY(0); }
+    .compare-bar-left { color: #e6edf3; font-size: 0.95em; }
+    .compare-bar-left strong { color: #58a6ff; }
+    .compare-bar-right { display: flex; gap: 10px; }
+    .btn { padding: 9px 20px; border-radius: 6px; border: 1px solid #3b4c6b; cursor: pointer; font-size: 0.9em; font-weight: 600; }
+    .btn-primary { background: #238636; border-color: #2ea04f; color: #fff; }
+    .btn-primary:hover { background: #2ea04f; }
+    .btn-secondary { background: #1c2333; color: #79c0ff; }
+    .btn-secondary:hover { background: #2d3a54; }
+    .btn-danger { background: #3d1215; color: #f85149; border-color: #f8514933; }
+    .btn-danger:hover { background: #5a1a1f; }
+
+    /* Compare modal */
+    .compare-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
+    .compare-modal.active { display: block; }
+    .compare-modal-inner { max-width: 1200px; margin: 40px auto; padding: 32px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; }
+    .compare-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .compare-modal-header h2 { color: #f0f6fc; font-size: 1.4em; }
+    .compare-modal-close { background: none; border: none; color: #7d8590; font-size: 1.6em; cursor: pointer; padding: 4px 10px; }
+    .compare-modal-close:hover { color: #f0f6fc; }
+
+    /* Field picker */
+    .field-picker { margin-bottom: 20px; }
+    .field-picker label { font-size: 0.8em; color: #7d8590; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+    .field-search { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px 14px; color: #e6edf3; font-size: 0.9em; outline: none; margin-bottom: 8px; }
+    .field-search:focus { border-color: #58a6ff; }
+    .field-search::placeholder { color: #484f58; }
+    .field-list { max-height: 200px; overflow-y: auto; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+    .field-chip { padding: 5px 12px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 20px; color: #7d8590; font-size: 0.82em; cursor: pointer; transition: all 0.1s; user-select: none; }
+    .field-chip:hover { border-color: #58a6ff; color: #e6edf3; }
+    .field-chip.active { background: #1a3056; border-color: #58a6ff; color: #58a6ff; }
+    .selected-fields { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 28px; }
+    .selected-tag { padding: 4px 10px; background: #1a3056; border: 1px solid #58a6ff; border-radius: 14px; color: #79c0ff; font-size: 0.82em; display: flex; align-items: center; gap: 6px; }
+    .selected-tag .remove { cursor: pointer; font-weight: bold; opacity: 0.7; }
+    .selected-tag .remove:hover { opacity: 1; }
+
+    .generate-btn-wrap { margin-bottom: 20px; }
+    .chart-container { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 16px; min-height: 300px; position: relative; }
+    .chart-placeholder { color: #484f58; text-align: center; padding: 60px 0; font-style: italic; }
+    .chart-loading { color: #7d8590; text-align: center; padding: 60px 0; }
+
     @media (max-width: 700px) {
       .run { flex-direction: column; align-items: flex-start; }
+      .run-body { flex-direction: column; }
       .gpu-box { width: 100%; }
       .controls { flex-direction: column; }
+      .compare-bar { flex-direction: column; gap: 10px; text-align: center; }
     }
   </style>
 </head>
 <body>
   <h1>Scene Test Automation</h1>
-  <p class="subtitle">Test results dashboard — <a href="https://drive.google.com/drive/u/5/folders/1Ckhix2o8tbz3VA6i25UQ1jf7JKx5bkQD" target="_blank">📂 Google Drive Folder</a></p>
+  <p class="subtitle">Test results dashboard — <a href="https://drive.google.com/drive/u/5/folders/1Ckhix2o8tbz3VA6i25UQ1jf7JKx5bkQD" target="_blank">Google Drive Folder</a></p>
 
   <div class="controls">
     <div class="control-group">
@@ -87,7 +139,7 @@
           <option value="scene_name">Scene</option>
           <option value="avg_gpu">Average GPU</option>
         </select>
-        <button id="sortDir" onclick="toggleSort()">↓ Newest</button>
+        <button id="sortDir" onclick="toggleSort()">&#8595; Newest</button>
       </div>
     </div>
   </div>
@@ -100,6 +152,40 @@
     <img id="popup-img" src="" alt="Graph" onclick="event.stopPropagation()">
   </div>
 
+  <!-- Compare bar -->
+  <div class="compare-bar" id="compareBar">
+    <div class="compare-bar-left"><strong id="compareCount">0</strong> tests selected</div>
+    <div class="compare-bar-right">
+      <button class="btn btn-danger" onclick="clearSelection()">Clear</button>
+      <button class="btn btn-primary" onclick="openCompareModal()">Compare</button>
+    </div>
+  </div>
+
+  <!-- Compare modal -->
+  <div class="compare-modal" id="compareModal">
+    <div class="compare-modal-inner">
+      <div class="compare-modal-header">
+        <h2>Compare Tests</h2>
+        <button class="compare-modal-close" onclick="closeCompareModal()">&times;</button>
+      </div>
+
+      <div class="field-picker">
+        <label>Search and select CSV fields to plot</label>
+        <input type="text" class="field-search" id="fieldSearch" placeholder="Type to filter... e.g. gpu, frag, vertex, alu" oninput="filterFields()">
+        <div class="field-list" id="fieldList"></div>
+        <div class="selected-fields" id="selectedFields"></div>
+      </div>
+
+      <div class="generate-btn-wrap">
+        <button class="btn btn-primary" onclick="generateCompareChart()">Generate Chart</button>
+      </div>
+
+      <div class="chart-container" id="chartContainer">
+        <p class="chart-placeholder">Select fields above and click Generate Chart</p>
+      </div>
+    </div>
+  </div>
+
   <script>
     const REPO_OWNER = "TheTripleL123";
     const REPO_NAME = "Scene-Test-Automation";
@@ -108,91 +194,85 @@
     const API_BASE = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents`;
     const RAW = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
 
-    let allRuns = []; // Stores all loaded run data
-    let sortAscending = false; // false = newest/descending first
+    let allRuns = [];
+    let sortAscending = false;
 
+    // Compare state
+    const selectedRunIds = new Set();
+    let csvHeaders = [];
+    const selectedFieldNames = new Set();
+    let compareChart = null;
+
+    // Chart.js color palette
+    const COLORS = [
+      "#58a6ff", "#f0883e", "#56d364", "#f778ba", "#d2a8ff",
+      "#79c0ff", "#ffa657", "#7ee787", "#ff7b72", "#a5d6ff",
+      "#d29922", "#3fb950", "#bc8cff", "#ff9bce", "#39d353"
+    ];
+
+    // ---- Popup ----
     function openPopup(url) {
       document.getElementById("popup-img").src = url;
       document.getElementById("overlay").classList.add("active");
     }
-
     function closePopup() {
       document.getElementById("overlay").classList.remove("active");
       document.getElementById("popup-img").src = "";
     }
-
     document.addEventListener("keydown", function(e) {
-      if (e.key === "Escape") closePopup();
+      if (e.key === "Escape") { closePopup(); closeCompareModal(); }
     });
 
     function forceDownload(url, filename) {
-      fetch(url)
-        .then(res => res.blob())
-        .then(blob => {
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = filename;
-          a.click();
-          URL.revokeObjectURL(a.href);
-        })
-        .catch(err => alert("Download failed: " + err.message));
+      fetch(url).then(r => r.blob()).then(blob => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }).catch(err => alert("Download failed: " + err.message));
     }
 
+    // ---- Sort ----
     function toggleSort() {
       sortAscending = !sortAscending;
-      const btn = document.getElementById("sortDir");
-      const sortBy = document.getElementById("sortBy").value;
-      if (sortBy === "avg_gpu") {
-        btn.textContent = sortAscending ? "↑ Low first" : "↓ High first";
-      } else {
-        btn.textContent = sortAscending ? "↑ Oldest" : "↓ Newest";
-      }
+      updateSortLabel();
       applyFilters();
     }
-
     function updateSortLabel() {
       const btn = document.getElementById("sortDir");
       const sortBy = document.getElementById("sortBy").value;
-      if (sortBy === "avg_gpu") {
-        btn.textContent = sortAscending ? "↑ Low first" : "↓ High first";
-      } else if (sortBy === "timestamp") {
-        btn.textContent = sortAscending ? "↑ Oldest" : "↓ Newest";
-      } else {
-        btn.textContent = sortAscending ? "↑ A→Z" : "↓ Z→A";
-      }
+      if (sortBy === "avg_gpu") btn.textContent = sortAscending ? "\u2191 Low first" : "\u2193 High first";
+      else if (sortBy === "timestamp") btn.textContent = sortAscending ? "\u2191 Oldest" : "\u2193 Newest";
+      else btn.textContent = sortAscending ? "\u2191 A\u2192Z" : "\u2193 Z\u2192A";
     }
-
-    // Update label when sort dropdown changes
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("sortBy").addEventListener("change", updateSortLabel);
     });
 
+    // ---- Filter & render ----
     function applyFilters() {
       updateSortLabel();
-      const nameQuery = document.getElementById("searchName").value.toLowerCase();
-      const sceneQuery = document.getElementById("searchScene").value.toLowerCase();
-      const timeQuery = document.getElementById("searchTime").value.toLowerCase();
+      const nameQ = document.getElementById("searchName").value.toLowerCase();
+      const sceneQ = document.getElementById("searchScene").value.toLowerCase();
+      const timeQ = document.getElementById("searchTime").value.toLowerCase();
       const sortBy = document.getElementById("sortBy").value;
 
       let filtered = allRuns.filter(r => {
-        if (nameQuery && !r.test_name.toLowerCase().includes(nameQuery)) return false;
-        if (sceneQuery && !r.scene_name.toLowerCase().includes(sceneQuery)) return false;
-        if (timeQuery && !r.timestamp.toLowerCase().includes(timeQuery)) return false;
+        if (nameQ && !r.test_name.toLowerCase().includes(nameQ)) return false;
+        if (sceneQ && !r.scene_name.toLowerCase().includes(sceneQ)) return false;
+        if (timeQ && !r.timestamp.toLowerCase().includes(timeQ)) return false;
         return true;
       });
 
       filtered.sort((a, b) => {
         let valA, valB;
         if (sortBy === "avg_gpu") {
-          valA = parseFloat(a.avg_gpu) || 0;
-          valB = parseFloat(b.avg_gpu) || 0;
-          // Push "—" (0) to bottom
+          valA = parseFloat(a.avg_gpu) || 0; valB = parseFloat(b.avg_gpu) || 0;
           if (valA === 0 && valB !== 0) return 1;
           if (valB === 0 && valA !== 0) return -1;
         } else {
-          valA = (a[sortBy] || "").toLowerCase();
-          valB = (b[sortBy] || "").toLowerCase();
-          // Push "-" to bottom
+          valA = (a[sortBy] || "").toLowerCase(); valB = (b[sortBy] || "").toLowerCase();
           if (valA === "-" && valB !== "-") return 1;
           if (valB === "-" && valA !== "-") return -1;
           if (valA === "-" && valB === "-") return 0;
@@ -207,88 +287,324 @@
 
     function renderRuns(runs) {
       const container = document.getElementById("content");
-
-      if (runs.length === 0) {
-        container.innerHTML = '<p class="empty">No matching tests found.</p>';
-        return;
-      }
+      if (runs.length === 0) { container.innerHTML = '<p class="empty">No matching tests found.</p>'; return; }
 
       let html = "";
       for (const r of runs) {
-        html += `<div class="run">`;
+        const isSelected = selectedRunIds.has(r.folder_name);
+        const selClass = isSelected ? " selected" : "";
+        const checked = isSelected ? " checked" : "";
+
+        html += `<div class="run${selClass}" id="run-${CSS.escape(r.folder_name)}">`;
+        html += `<input type="checkbox" class="run-checkbox"${checked} onchange="toggleRun('${escAttr(r.folder_name)}')">`;
+        html += `<div class="run-body">`;
         html += `<div class="run-left">`;
-        html += `<div class="run-title">${r.folder_name}</div>`;
+        html += `<div class="run-title">${esc(r.folder_name)}</div>`;
         html += `<div class="run-meta">`;
-        html += `<div class="meta-tag">Name: <span>${r.test_name}</span></div>`;
-        html += `<div class="meta-tag">Scene: <span>${r.scene_name}</span></div>`;
-        html += `<div class="meta-tag">Started: <span>${r.timestamp}</span></div>`;
+        html += `<div class="meta-tag">Name: <span>${esc(r.test_name)}</span></div>`;
+        html += `<div class="meta-tag">Scene: <span>${esc(r.scene_name)}</span></div>`;
+        html += `<div class="meta-tag">Started: <span>${esc(r.timestamp)}</span></div>`;
         html += `</div>`;
         html += `<div class="files">`;
 
         for (const file of r.files) {
           const rawUrl = `${RAW}/AllTestRuns/${encodeURIComponent(r.folder_name)}/${file.name}`;
           if (file.name.endsWith(".csv")) {
-            html += `<a class="file-link" href="#" onclick="forceDownload('${rawUrl}', '${file.name}'); return false;">📊 CSV Report</a>`;
-          } else if (file.name.endsWith(".png")) {
-            html += `<a class="file-link" href="#" onclick="openPopup('${rawUrl}'); return false;">🖼️ GPU Graph</a>`;
+            html += `<a class="file-link" href="#" onclick="forceDownload('${escAttr(rawUrl)}', '${escAttr(file.name)}'); return false;">CSV Report</a>`;
+          } else if (file.name === "APP_TIME_GRAPH.png") {
+            html += `<a class="file-link" href="#" onclick="openPopup('${escAttr(rawUrl)}'); return false;">GPU Graph</a>`;
           }
         }
         if (r.drive_link) {
-          html += `<a class="file-link drive" href="${r.drive_link}" target="_blank">📂 Drive Folder</a>`;
+          html += `<a class="file-link drive" href="${escAttr(r.drive_link)}" target="_blank">Drive Folder</a>`;
         }
-        html += `</div>`;
-        html += `</div>`;
+        html += `</div></div>`; // close files + run-left
 
-        html += `<div class="gpu-box">`;
-        html += `<div class="gpu-label">AVERAGE GPU</div>`;
-        html += `<div class="gpu-value">${r.avg_gpu}</div>`;
-        html += `</div>`;
+        html += `<div class="run-right">`;
+        // Thumbnail
+        const thumbFile = r.files.find(f => f.name === "THUMBNAIL.png");
+        if (thumbFile) {
+          const thumbUrl = `${RAW}/AllTestRuns/${encodeURIComponent(r.folder_name)}/THUMBNAIL.png`;
+          html += `<div class="thumb-container" onclick="openPopup('${escAttr(thumbUrl)}')"><img src="${escAttr(thumbUrl)}" alt="Preview" loading="lazy"></div>`;
+        }
+        html += `<div class="gpu-box"><div class="gpu-label">AVG GPU</div><div class="gpu-value">${esc(String(r.avg_gpu))}</div></div>`;
+        html += `</div>`; // close run-right
 
-        html += `</div>`;
+        html += `</div></div>`; // close run-body + run
       }
-
       container.innerHTML = html;
     }
 
+    // ---- Selection / Compare bar ----
+    function toggleRun(folderName) {
+      if (selectedRunIds.has(folderName)) selectedRunIds.delete(folderName);
+      else selectedRunIds.add(folderName);
+      updateCompareBar();
+      applyFilters(); // re-render to update checked state
+    }
+    function clearSelection() {
+      selectedRunIds.clear();
+      updateCompareBar();
+      applyFilters();
+    }
+    function updateCompareBar() {
+      const bar = document.getElementById("compareBar");
+      const count = selectedRunIds.size;
+      document.getElementById("compareCount").textContent = count;
+      bar.classList.toggle("visible", count > 0);
+    }
+
+    // ---- Compare modal ----
+    function openCompareModal() {
+      if (selectedRunIds.size === 0) return;
+      document.getElementById("compareModal").classList.add("active");
+      // Load CSV headers from the first selected run
+      loadCsvHeaders();
+    }
+    function closeCompareModal() {
+      document.getElementById("compareModal").classList.remove("active");
+    }
+
+    async function loadCsvHeaders() {
+      if (csvHeaders.length > 0) { renderFieldPicker(); return; }
+      const firstRun = allRuns.find(r => selectedRunIds.has(r.folder_name));
+      if (!firstRun) return;
+      const csvFile = firstRun.files.find(f => f.name.endsWith(".csv"));
+      if (!csvFile) return;
+
+      const url = `${RAW}/AllTestRuns/${encodeURIComponent(firstRun.folder_name)}/${csvFile.name}`;
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const firstLine = text.split("\n")[0];
+        csvHeaders = firstLine.split(",").map(h => h.trim()).filter(h => h.length > 0);
+        renderFieldPicker();
+      } catch (e) {
+        document.getElementById("fieldList").innerHTML = '<span style="color:#f85149">Failed to load CSV headers</span>';
+      }
+    }
+
+    function renderFieldPicker() {
+      const query = (document.getElementById("fieldSearch").value || "").toLowerCase();
+      const container = document.getElementById("fieldList");
+
+      // Skip "Time Stamp" since it's the X axis
+      const filtered = csvHeaders.filter(h => h !== "Time Stamp" && h.toLowerCase().includes(query));
+
+      container.innerHTML = filtered.map(h => {
+        const activeClass = selectedFieldNames.has(h) ? " active" : "";
+        return `<span class="field-chip${activeClass}" onclick="toggleField('${escAttr(h)}')">${esc(h)}</span>`;
+      }).join("");
+
+      renderSelectedTags();
+    }
+
+    function filterFields() { renderFieldPicker(); }
+
+    function toggleField(name) {
+      if (selectedFieldNames.has(name)) selectedFieldNames.delete(name);
+      else selectedFieldNames.add(name);
+      renderFieldPicker();
+    }
+
+    function removeField(name) {
+      selectedFieldNames.delete(name);
+      renderFieldPicker();
+    }
+
+    function renderSelectedTags() {
+      const container = document.getElementById("selectedFields");
+      if (selectedFieldNames.size === 0) {
+        container.innerHTML = '<span style="color:#484f58;font-size:0.85em">No fields selected</span>';
+        return;
+      }
+      container.innerHTML = Array.from(selectedFieldNames).map(name =>
+        `<span class="selected-tag">${esc(name)} <span class="remove" onclick="removeField('${escAttr(name)}')">&times;</span></span>`
+      ).join("");
+    }
+
+    // ---- CSV parsing ----
+    async function fetchCSV(folderName) {
+      const run = allRuns.find(r => r.folder_name === folderName);
+      if (!run) return null;
+      const csvFile = run.files.find(f => f.name.endsWith(".csv"));
+      if (!csvFile) return null;
+
+      const url = `${RAW}/AllTestRuns/${encodeURIComponent(folderName)}/${csvFile.name}`;
+      const res = await fetch(url);
+      const text = await res.text();
+      return parseCSV(text);
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split("\n");
+      if (lines.length < 2) return { headers: [], rows: [] };
+      const headers = lines[0].split(",").map(h => h.trim());
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const vals = lines[i].split(",");
+        if (vals.length < headers.length) continue;
+        const row = {};
+        for (let j = 0; j < headers.length; j++) {
+          row[headers[j]] = parseFloat(vals[j]) || 0;
+        }
+        rows.push(row);
+      }
+      return { headers, rows };
+    }
+
+    // ---- Chart generation ----
+    async function generateCompareChart() {
+      if (selectedFieldNames.size === 0) {
+        alert("Please select at least one field to plot.");
+        return;
+      }
+
+      const chartDiv = document.getElementById("chartContainer");
+      chartDiv.innerHTML = '<p class="chart-loading">Loading CSV data...</p>';
+
+      const fields = Array.from(selectedFieldNames);
+      const runIds = Array.from(selectedRunIds);
+
+      // Fetch all CSVs in parallel
+      const csvDataMap = {};
+      const results = await Promise.allSettled(runIds.map(async id => {
+        csvDataMap[id] = await fetchCSV(id);
+      }));
+
+      // Destroy old chart
+      if (compareChart) { compareChart.destroy(); compareChart = null; }
+
+      // Build chart
+      chartDiv.innerHTML = '<canvas id="compareCanvas"></canvas>';
+      const ctx = document.getElementById("compareCanvas").getContext("2d");
+
+      const datasets = [];
+      let colorIdx = 0;
+
+      // Build a short label for each run (test_name + timestamp)
+      function shortLabel(folderId) {
+        const run = allRuns.find(r => r.folder_name === folderId);
+        if (!run) return folderId.substring(0, 30);
+        const parts = [];
+        if (run.test_name && run.test_name !== "-") parts.push(run.test_name);
+        if (run.timestamp && run.timestamp !== "-") parts.push(run.timestamp);
+        return parts.join(" | ") || folderId.substring(0, 30);
+      }
+
+      for (const field of fields) {
+        for (const runId of runIds) {
+          const csv = csvDataMap[runId];
+          if (!csv || csv.rows.length === 0) continue;
+
+          // Filter after 60s like the original graph
+          const filtered = csv.rows.filter(r => (r["Time Stamp"] || 0) >= 60000);
+          if (filtered.length === 0) continue;
+
+          const timesArr = filtered.map(r => (r["Time Stamp"] / 1000).toFixed(1));
+          const values = filtered.map(r => r[field] || 0);
+          const avg = values.reduce((s, v) => s + v, 0) / values.length;
+
+          const color = COLORS[colorIdx % COLORS.length];
+          colorIdx++;
+
+          const label = fields.length === 1
+            ? `${shortLabel(runId)} (avg: ${avg.toFixed(1)})`
+            : `${field} - ${shortLabel(runId)} (avg: ${avg.toFixed(1)})`;
+
+          datasets.push({
+            label,
+            data: values,
+            borderColor: color,
+            backgroundColor: color + "20",
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.2,
+          });
+        }
+      }
+
+      if (datasets.length === 0) {
+        chartDiv.innerHTML = '<p class="chart-placeholder">No data found for the selected fields.</p>';
+        return;
+      }
+
+      // Use the longest time axis
+      let longestTimes = [];
+      for (const runId of runIds) {
+        const csv = csvDataMap[runId];
+        if (!csv) continue;
+        const filtered = csv.rows.filter(r => (r["Time Stamp"] || 0) >= 60000);
+        const t = filtered.map(r => (r["Time Stamp"] / 1000).toFixed(1));
+        if (t.length > longestTimes.length) longestTimes = t;
+      }
+
+      compareChart = new Chart(ctx, {
+        type: "line",
+        data: { labels: longestTimes, datasets },
+        options: {
+          responsive: true,
+          animation: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: {
+              position: "top",
+              labels: { color: "#e6edf3", font: { size: 11 }, boxWidth: 14, padding: 12 }
+            },
+            tooltip: { backgroundColor: "#161b22", titleColor: "#f0f6fc", bodyColor: "#e6edf3", borderColor: "#30363d", borderWidth: 1 }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Time (seconds)", color: "#7d8590" },
+              ticks: { color: "#7d8590", maxTicksLimit: 20 },
+              grid: { color: "#21262d" }
+            },
+            y: {
+              title: { display: true, text: fields.join(" / "), color: "#7d8590" },
+              ticks: { color: "#7d8590" },
+              grid: { color: "#21262d" }
+            }
+          }
+        }
+      });
+    }
+
+    // ---- Helpers ----
+    function esc(s) {
+      const d = document.createElement("div"); d.textContent = s; return d.innerHTML;
+    }
+    function escAttr(s) {
+      return s.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    }
+
+    // ---- Load data ----
     async function load() {
       const container = document.getElementById("content");
-
       try {
         const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`);
-        if (res.status === 404) {
-          container.innerHTML = '<p class="empty">No test runs yet.</p>';
-          return;
-        }
+        if (res.status === 404) { container.innerHTML = '<p class="empty">No test runs yet.</p>'; return; }
         if (!res.ok) throw new Error(`API returned ${res.status}`);
         const items = await res.json();
-
         const folders = items.filter(item => item.type === "dir");
-
-        if (folders.length === 0) {
-          container.innerHTML = '<p class="empty">No test runs yet.</p>';
-          return;
-        }
+        if (folders.length === 0) { container.innerHTML = '<p class="empty">No test runs yet.</p>'; return; }
 
         allRuns = [];
         for (const folder of folders) {
           const filesRes = await fetch(folder.url);
           const files = await filesRes.json();
 
-          let avgGpu = "—";
-          let driveLink = null;
-          let testName = "-";
-          let sceneName = "-";
-          let timestamp = "-";
+          let avgGpu = "\u2014", driveLink = null, testName = "-", sceneName = "-", timestamp = "-", hasThumbnail = false;
 
           try {
             const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/metadata.json?t=${Date.now()}`);
             if (metaRes.ok) {
               const meta = JSON.parse((await metaRes.text()).trim());
-              avgGpu = meta.avg_gpu || "—";
+              avgGpu = meta.avg_gpu || "\u2014";
               driveLink = meta.drive_link || null;
               testName = meta.test_name || "-";
               sceneName = meta.scene_name || "-";
               timestamp = meta.timestamp || "-";
+              hasThumbnail = meta.has_thumbnail || false;
             }
           } catch (e) {}
 
@@ -300,10 +616,10 @@
             test_name: testName,
             scene_name: sceneName,
             timestamp: timestamp,
+            has_thumbnail: hasThumbnail,
           });
         }
 
-        // Default: newest first by reversing API order
         allRuns.reverse();
         applyFilters();
       } catch (err) {
