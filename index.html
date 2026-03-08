@@ -312,7 +312,7 @@
           if (file.name.endsWith(".csv")) {
             html += `<a class="file-link" href="#" onclick="forceDownload('${escAttr(rawUrl)}', '${escAttr(file.name)}'); return false;">&#128202; CSV Report</a>`;
           } else if (file.name === "APP_TIME_GRAPH.png") {
-            html += `<a class="file-link" href="#" onclick="openPopup('${escAttr(rawUrl)}'); return false;">&#128248; GPU Graph</a>`;
+            html += `<a class="file-link" href="#" onclick="openPopup('${escAttr(rawUrl)}'); return false;">&#128200; GPU Graph</a>`;
           }
         }
         if (r.drive_link) {
