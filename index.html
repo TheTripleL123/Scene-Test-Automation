@@ -357,6 +357,11 @@
     // ---- Compare modal ----
     function openCompareModal() {
       if (selectedRunIds.size === 0) return;
+      // Clear previous state so each compare starts fresh
+      selectedFieldNames.clear();
+      if (compareChart) { compareChart.destroy(); compareChart = null; }
+      document.getElementById("chartContainer").innerHTML = '<p class="chart-placeholder">Select fields above and click Generate Chart</p>';
+      document.getElementById("fieldSearch").value = "";
       document.getElementById("compareModal").classList.add("active");
       // Load CSV headers from the first selected run
       loadCsvHeaders();
@@ -509,8 +514,8 @@
           colorIdx++;
 
           const label = fields.length === 1
-            ? `${shortLabel(runId)} (avg: ${avg.toFixed(1)})`
-            : `${field} - ${shortLabel(runId)} (avg: ${avg.toFixed(1)})`;
+            ? `${shortLabel(runId)} (avg: ${Math.round(avg)})`
+            : `${field} - ${shortLabel(runId)} (avg: ${Math.round(avg)})`;
 
           datasets.push({
             label,
