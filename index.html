@@ -45,7 +45,7 @@
     .file-link.drive:hover { background: #1a3326; }
 
     .run-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
-    .thumb-container { width: 120px; height: 80px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 1px solid #30363d; flex-shrink: 0; }
+    .thumb-container { width: 200px; height: 130px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 1px solid #30363d; flex-shrink: 0; }
     .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
     .gpu-box { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 8px; padding: 16px 28px; text-align: center; flex-shrink: 0; min-width: 150px; }
     .gpu-label { font-size: 0.8em; color: #7d8590; margin-bottom: 4px; letter-spacing: 0.05em; }
@@ -103,6 +103,18 @@
     .chart-container { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 16px; min-height: 300px; position: relative; }
     .chart-placeholder { color: #484f58; text-align: center; padding: 60px 0; font-style: italic; }
     .chart-loading { color: #7d8590; text-align: center; padding: 60px 0; }
+
+    /* Custom HTML legend for compare chart */
+    .html-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; padding: 14px 18px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; }
+    .html-legend:empty { display: none; }
+    .legend-group { padding: 10px 14px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; min-width: 200px; flex: 1; }
+    .legend-group-title { font-size: 0.95em; font-weight: 700; color: #f0f6fc; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #30363d; }
+    .legend-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 0.95em; color: #e6edf3; cursor: pointer; }
+    .legend-item:hover { opacity: 0.7; }
+    .legend-item.hidden { opacity: 0.3; text-decoration: line-through; }
+    .legend-color { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+    .legend-field { flex: 1; }
+    .legend-avg { font-size: 1.15em; font-weight: 700; color: #79c0ff; margin-left: 4px; }
 
     @media (max-width: 700px) {
       .run { flex-direction: column; align-items: flex-start; }
@@ -180,6 +192,8 @@
         <button class="btn btn-primary" onclick="generateCompareChart()">Generate Chart</button>
       </div>
 
+      <div class="html-legend" id="htmlLegend"></div>
+
       <div class="chart-container" id="chartContainer">
         <p class="chart-placeholder">Select fields above and click Generate Chart</p>
       </div>
@@ -203,11 +217,17 @@
     const selectedFieldNames = new Set();
     let compareChart = null;
 
-    // Chart.js color palette
-    const COLORS = [
-      "#58a6ff", "#f0883e", "#56d364", "#f778ba", "#d2a8ff",
-      "#79c0ff", "#ffa657", "#7ee787", "#ff7b72", "#a5d6ff",
-      "#d29922", "#3fb950", "#bc8cff", "#ff9bce", "#39d353"
+    // Per-test color palettes: each test gets its own hue family,
+    // fields within a test get different shades (light → dark)
+    const TEST_PALETTES = [
+      ["#93c5fd", "#60a5fa", "#3b82f6", "#2563eb", "#1d4ed8", "#1e40af", "#1e3a8a", "#172554"],  // Blues
+      ["#fca5a5", "#f87171", "#ef4444", "#dc2626", "#b91c1c", "#991b1b", "#7f1d1d", "#450a0a"],  // Reds
+      ["#86efac", "#4ade80", "#22c55e", "#16a34a", "#15803d", "#166534", "#14532d", "#052e16"],  // Greens
+      ["#c4b5fd", "#a78bfa", "#8b5cf6", "#7c3aed", "#6d28d9", "#5b21b6", "#4c1d95", "#2e1065"],  // Purples
+      ["#fdba74", "#fb923c", "#f97316", "#ea580c", "#c2410c", "#9a3412", "#7c2d12", "#431407"],  // Oranges
+      ["#67e8f9", "#22d3ee", "#06b6d4", "#0891b2", "#0e7490", "#155e75", "#164e63", "#083344"],  // Cyans
+      ["#f9a8d4", "#f472b6", "#ec4899", "#db2777", "#be185d", "#9d174d", "#831843", "#500724"],  // Pinks
+      ["#fde047", "#facc15", "#eab308", "#ca8a04", "#a16207", "#854d0e", "#713f12", "#422006"],  // Yellows
     ];
 
     // ---- Popup ----
@@ -361,6 +381,7 @@
       selectedFieldNames.clear();
       if (compareChart) { compareChart.destroy(); compareChart = null; }
       document.getElementById("chartContainer").innerHTML = '<p class="chart-placeholder">Select fields above and click Generate Chart</p>';
+      document.getElementById("htmlLegend").innerHTML = "";
       document.getElementById("fieldSearch").value = "";
       document.getElementById("compareModal").classList.add("active");
       // Load CSV headers from the first selected run
@@ -459,6 +480,9 @@
     }
 
     // ---- Chart generation ----
+    // Track dataset metadata for legend toggling
+    let datasetMeta = []; // { runId, field, avg, color, datasetIndex }
+
     async function generateCompareChart() {
       if (selectedFieldNames.size === 0) {
         alert("Please select at least one field to plot.");
@@ -467,13 +491,14 @@
 
       const chartDiv = document.getElementById("chartContainer");
       chartDiv.innerHTML = '<p class="chart-loading">Loading CSV data...</p>';
+      document.getElementById("htmlLegend").innerHTML = "";
 
       const fields = Array.from(selectedFieldNames);
       const runIds = Array.from(selectedRunIds);
 
       // Fetch all CSVs in parallel
       const csvDataMap = {};
-      const results = await Promise.allSettled(runIds.map(async id => {
+      await Promise.allSettled(runIds.map(async id => {
         csvDataMap[id] = await fetchCSV(id);
       }));
 
@@ -485,9 +510,9 @@
       const ctx = document.getElementById("compareCanvas").getContext("2d");
 
       const datasets = [];
-      let colorIdx = 0;
+      datasetMeta = [];
 
-      // Build a short label for each run (test_name + timestamp)
+      // Build a short label for each run
       function shortLabel(folderId) {
         const run = allRuns.find(r => r.folder_name === folderId);
         if (!run) return folderId.substring(0, 30);
@@ -497,25 +522,25 @@
         return parts.join(" | ") || folderId.substring(0, 30);
       }
 
-      for (const field of fields) {
-        for (const runId of runIds) {
-          const csv = csvDataMap[runId];
-          if (!csv || csv.rows.length === 0) continue;
+      // Each TEST gets its own color palette, fields get shades within it
+      for (let runIdx = 0; runIdx < runIds.length; runIdx++) {
+        const runId = runIds[runIdx];
+        const csv = csvDataMap[runId];
+        if (!csv || csv.rows.length === 0) continue;
 
-          // Filter after 60s like the original graph
+        const palette = TEST_PALETTES[runIdx % TEST_PALETTES.length];
+
+        for (let fieldIdx = 0; fieldIdx < fields.length; fieldIdx++) {
+          const field = fields[fieldIdx];
           const filtered = csv.rows.filter(r => (r["Time Stamp"] || 0) >= 60000);
           if (filtered.length === 0) continue;
 
-          const timesArr = filtered.map(r => (r["Time Stamp"] / 1000).toFixed(1));
           const values = filtered.map(r => r[field] || 0);
           const avg = values.reduce((s, v) => s + v, 0) / values.length;
+          const color = palette[fieldIdx % palette.length];
 
-          const color = COLORS[colorIdx % COLORS.length];
-          colorIdx++;
-
-          const label = fields.length === 1
-            ? `${shortLabel(runId)} (avg: ${Math.round(avg)})`
-            : `${field} - ${shortLabel(runId)} (avg: ${Math.round(avg)})`;
+          const dsIndex = datasets.length;
+          const label = `${field} - ${shortLabel(runId)} (avg: ${Math.round(avg)})`;
 
           datasets.push({
             label,
@@ -526,6 +551,8 @@
             pointRadius: 0,
             tension: 0.2,
           });
+
+          datasetMeta.push({ runId, field, avg: Math.round(avg), color, datasetIndex: dsIndex });
         }
       }
 
@@ -552,11 +579,29 @@
           animation: false,
           interaction: { mode: "index", intersect: false },
           plugins: {
-            legend: {
-              position: "top",
-              labels: { color: "#e6edf3", font: { size: 11 }, boxWidth: 14, padding: 12 }
-            },
-            tooltip: { backgroundColor: "#161b22", titleColor: "#f0f6fc", bodyColor: "#e6edf3", borderColor: "#30363d", borderWidth: 1 }
+            legend: { display: false }, // we use custom HTML legend
+            tooltip: {
+              backgroundColor: "#161b22",
+              titleColor: "#f0f6fc",
+              titleFont: { size: 14, weight: "bold" },
+              bodyColor: "#e6edf3",
+              bodyFont: { size: 13 },
+              bodySpacing: 10,
+              padding: 16,
+              borderColor: "#30363d",
+              borderWidth: 1,
+              boxPadding: 6,
+              callbacks: {
+                label: function(ctx) {
+                  const meta = datasetMeta[ctx.datasetIndex];
+                  if (!meta) return ctx.dataset.label;
+                  return `  ${meta.field}: ${ctx.formattedValue}   (avg: ${meta.avg})`;
+                },
+                labelColor: function(ctx) {
+                  return { borderColor: ctx.dataset.borderColor, backgroundColor: ctx.dataset.borderColor, borderWidth: 2, borderRadius: 2 };
+                }
+              }
+            }
           },
           scales: {
             x: {
@@ -572,6 +617,41 @@
           }
         }
       });
+
+      // Render custom HTML legend grouped by test
+      renderHtmlLegend(runIds, fields, shortLabel);
+    }
+
+    function renderHtmlLegend(runIds, fields, shortLabel) {
+      const container = document.getElementById("htmlLegend");
+      let html = "";
+
+      for (const runId of runIds) {
+        const items = datasetMeta.filter(m => m.runId === runId);
+        if (items.length === 0) continue;
+
+        html += `<div class="legend-group">`;
+        html += `<div class="legend-group-title">${esc(shortLabel(runId))}</div>`;
+        for (const item of items) {
+          html += `<div class="legend-item" data-ds="${item.datasetIndex}" onclick="toggleDataset(${item.datasetIndex})">`;
+          html += `<span class="legend-color" style="background:${item.color}"></span>`;
+          html += `<span class="legend-field">${esc(item.field)}</span>`;
+          html += `<span class="legend-avg">avg: ${item.avg}</span>`;
+          html += `</div>`;
+        }
+        html += `</div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function toggleDataset(dsIndex) {
+      if (!compareChart) return;
+      const meta = compareChart.getDatasetMeta(dsIndex);
+      meta.hidden = !meta.hidden;
+      compareChart.update();
+      // Update legend item style
+      const el = document.querySelector(`.legend-item[data-ds="${dsIndex}"]`);
+      if (el) el.classList.toggle("hidden", meta.hidden);
     }
 
     // ---- Helpers ----
@@ -583,48 +663,81 @@
     }
 
     // ---- Load data ----
+    // Uses the Git Trees API (1 single API call for the entire repo) to avoid rate limits.
+    // Metadata is fetched from raw.githubusercontent.com which has no API rate limit.
     async function load() {
       const container = document.getElementById("content");
       try {
-        const res = await fetch(`${API_BASE}/AllTestRuns?ref=${BRANCH}`);
-        if (res.status === 404) { container.innerHTML = '<p class="empty">No test runs yet.</p>'; return; }
-        if (!res.ok) throw new Error(`API returned ${res.status}`);
-        const items = await res.json();
-        const folders = items.filter(item => item.type === "dir");
-        if (folders.length === 0) { container.innerHTML = '<p class="empty">No test runs yet.</p>'; return; }
+        // Single API call: fetch the full repo tree recursively
+        const treeUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${BRANCH}?recursive=1`;
+        const res = await fetch(treeUrl);
 
+        if (res.status === 403) {
+          const rateLimitReset = res.headers.get("X-RateLimit-Reset");
+          let waitMsg = "";
+          if (rateLimitReset) {
+            const resetDate = new Date(parseInt(rateLimitReset) * 1000);
+            const mins = Math.ceil((resetDate - Date.now()) / 60000);
+            waitMsg = ` Resets in ~${mins} minute${mins !== 1 ? "s" : ""}.`;
+          }
+          container.innerHTML = `<div class="error">GitHub API rate limit reached (60 requests/hour for unauthenticated users).${waitMsg} Try refreshing later.</div>`;
+          return;
+        }
+        if (!res.ok) throw new Error(`API returned ${res.status}`);
+
+        const tree = (await res.json()).tree || [];
+
+        // Parse the tree to find folders and files under AllTestRuns/
+        const folderFiles = {}; // { folderName: [filename, ...] }
+        for (const item of tree) {
+          if (!item.path.startsWith("AllTestRuns/")) continue;
+          const parts = item.path.replace("AllTestRuns/", "").split("/");
+          if (parts.length === 2 && item.type === "blob") {
+            const folder = parts[0];
+            const file = parts[1];
+            if (!folderFiles[folder]) folderFiles[folder] = [];
+            folderFiles[folder].push(file);
+          }
+        }
+
+        const folderNames = Object.keys(folderFiles);
+        if (folderNames.length === 0) { container.innerHTML = '<p class="empty">No test runs yet.</p>'; return; }
+
+        // Fetch all metadata.json files in parallel from raw.githubusercontent (no API rate limit)
         allRuns = [];
-        for (const folder of folders) {
-          const filesRes = await fetch(folder.url);
-          const files = await filesRes.json();
+        const metaPromises = folderNames.map(async folder => {
+          const files = folderFiles[folder].filter(f => !f.endsWith(".json"));
 
           let avgGpu = "\u2014", driveLink = null, testName = "-", sceneName = "-", timestamp = "-", hasThumbnail = false;
 
-          try {
-            const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder.name)}/metadata.json?t=${Date.now()}`);
-            if (metaRes.ok) {
-              const meta = JSON.parse((await metaRes.text()).trim());
-              avgGpu = meta.avg_gpu || "\u2014";
-              driveLink = meta.drive_link || null;
-              testName = meta.test_name || "-";
-              sceneName = meta.scene_name || "-";
-              timestamp = meta.timestamp || "-";
-              hasThumbnail = meta.has_thumbnail || false;
-            }
-          } catch (e) {}
+          if (folderFiles[folder].includes("metadata.json")) {
+            try {
+              const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder)}/metadata.json?t=${Date.now()}`);
+              if (metaRes.ok) {
+                const meta = JSON.parse((await metaRes.text()).trim());
+                avgGpu = meta.avg_gpu || "\u2014";
+                driveLink = meta.drive_link || null;
+                testName = meta.test_name || "-";
+                sceneName = meta.scene_name || "-";
+                timestamp = meta.timestamp || "-";
+                hasThumbnail = meta.has_thumbnail || false;
+              }
+            } catch (e) {}
+          }
 
-          allRuns.push({
-            folder_name: folder.name,
-            files: files.filter(f => !f.name.endsWith(".json")),
+          return {
+            folder_name: folder,
+            files: files.map(f => ({ name: f })),
             avg_gpu: avgGpu,
             drive_link: driveLink,
             test_name: testName,
             scene_name: sceneName,
             timestamp: timestamp,
             has_thumbnail: hasThumbnail,
-          });
-        }
+          };
+        });
 
+        allRuns = await Promise.all(metaPromises);
         allRuns.reverse();
         applyFilters();
       } catch (err) {
