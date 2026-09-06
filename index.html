@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scene Test Automation</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3/dist/jszip.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 32px; padding-bottom: 100px; background: #0d1117; color: #e6edf3; font-size: 16px; }
+    h1 { margin-bottom: 6px; color: #f0f6fc; font-size: 1.8em; padding-bottom: 12px; border-bottom: 2px solid #30363d; }
+    .subtitle { color: #7d8590; margin-bottom: 20px; font-size: 1em; margin-top: 8px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .subtitle a { color: #79c0ff; text-decoration: none; }
+    .subtitle a:hover { text-decoration: underline; }
+
+    /* Token settings */
+    .settings-btn { background: none; border: 1px solid #30363d; border-radius: 6px; padding: 4px 10px; color: #7d8590; cursor: pointer; font-size: 0.9em; }
+    .settings-btn:hover { color: #e6edf3; border-color: #58a6ff; }
+    .settings-btn.has-token { color: #56d364; border-color: #2ea04f; }
+    .token-panel { display: none; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; }
+    .token-panel.visible { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .token-panel label { font-size: 0.8em; color: #7d8590; white-space: nowrap; }
+    .token-panel input { flex: 1; min-width: 200px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #e6edf3; font-size: 0.85em; font-family: monospace; }
+    .token-panel input:focus { border-color: #58a6ff; outline: none; }
+    .token-panel .token-save { padding: 8px 16px; background: #238636; border: 1px solid #2ea04f; border-radius: 6px; color: #fff; cursor: pointer; font-size: 0.85em; font-weight: 600; }
+    .token-panel .token-save:hover { background: #2ea04f; }
+    .token-panel .token-clear { padding: 8px 16px; background: #3d1215; border: 1px solid #f8514933; border-radius: 6px; color: #f85149; cursor: pointer; font-size: 0.85em; }
+    .token-panel .token-clear:hover { background: #5a1a1f; }
+    .token-hint { font-size: 0.75em; color: #484f58; width: 100%; margin-top: 4px; }
+
+    /* Controls bar */
+    .controls { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+    .control-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+    .control-group label { font-size: 0.75em; color: #7d8590; text-transform: uppercase; letter-spacing: 0.05em; }
+    .control-group input, .control-group select { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #e6edf3; font-size: 0.9em; outline: none; }
+    .control-group input:focus, .control-group select:focus { border-color: #58a6ff; }
+    .control-group input::placeholder { color: #484f58; }
+    .sort-group { display: flex; flex-direction: column; gap: 4px; min-width: 200px; }
+    .sort-group label { font-size: 0.75em; color: #7d8590; text-transform: uppercase; letter-spacing: 0.05em; }
+    .sort-row { display: flex; gap: 6px; }
+    .sort-row select { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; color: #e6edf3; font-size: 0.9em; outline: none; flex: 1; }
+    .sort-row select:focus { border-color: #58a6ff; }
+    .sort-row button { background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; padding: 8px 12px; color: #79c0ff; cursor: pointer; font-size: 0.9em; white-space: nowrap; }
+    .sort-row button:hover { background: #2d3a54; }
+    .show-archived-group { display: flex; align-items: center; gap: 8px; min-width: 150px; padding-bottom: 2px; }
+    .show-archived-group label { font-size: 0.85em; color: #7d8590; cursor: pointer; user-select: none; }
+    .show-archived-group input { accent-color: #58a6ff; cursor: pointer; width: 16px; height: 16px; }
+
+    /* Test cards */
+    .run { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; transition: border-color 0.15s; }
+    .run.selected { border-color: #58a6ff; background: #161b2a; }
+    .run.archived { opacity: 0.5; border-style: dashed; }
+    .run-checkbox { flex-shrink: 0; width: 18px; height: 18px; accent-color: #58a6ff; cursor: pointer; }
+    .run-body { flex: 1; min-width: 0; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .run-left { flex: 1; min-width: 0; }
+    .run-title { font-weight: 600; font-size: 1.05em; color: #f0f6fc; margin-bottom: 4px; word-break: break-word; }
+    .run-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; align-items: center; }
+    .meta-tag { font-size: 0.85em; padding: 3px 9px; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; color: #7d8590; }
+    .meta-tag span { color: #e6edf3; font-weight: 500; }
+    .meta-tag.user-tag span { color: #d2a8ff; }
+    .meta-stack { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+    .meta-tag.branch-tag span { color: #79c0ff; }
+    .meta-tag.commit-tag span { font-family: monospace; color: #79c0ff; }
+    .files { display: flex; gap: 6px; flex-wrap: wrap; }
+    .file-link { display: inline-block; padding: 5px 11px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 5px; color: #79c0ff; text-decoration: none; font-size: 0.85em; cursor: pointer; }
+    .file-link:hover { background: #2d3a54; }
+    .file-link.drive { background: #122117; border-color: #2ea04f; color: #56d364; }
+    .file-link.drive:hover { background: #1a3326; }
+    .file-link.logs { background: #1a1525; border-color: #7c3aed; color: #c4b5fd; }
+    .file-link.logs:hover { background: #2a1f3d; }
+    .file-link.logs.downloading { opacity: 0.6; pointer-events: none; }
+
+    .run-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .screenshots-row { display: flex; gap: 10px; flex-shrink: 0; margin: 0 6px; }
+    .screenshot-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .screenshot-label { font-size: 0.72em; color: #7d8590; text-transform: uppercase; letter-spacing: 0.05em; }
+    .thumb-container { width: 130px; height: 85px; border-radius: 5px; overflow: hidden; cursor: pointer; border: 1px solid #30363d; flex-shrink: 0; }
+    .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+    /* One row per metric, laid out along the subtraction: the term subtracted from, what
+       it is subtracted by, then the difference. Rows rather than columns so a card stays
+       the height of the content on its left. */
+    .metric-rows { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+    .metric-row { display: flex; align-items: center; gap: 7px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 6px; padding: 5px 11px; }
+    .metric-name { font-size: 0.72em; color: #c9d1d9; letter-spacing: 0.06em; min-width: 46px; font-weight: 600; }
+    .metric-cell { text-align: center; min-width: 60px; }
+    .metric-cell-label { font-size: 0.6em; color: #7d8590; letter-spacing: 0.04em; }
+    .metric-cell-value { font-family: monospace; font-size: 1.2em; color: #79c0ff; font-weight: 700; line-height: 1.15; }
+    .metric-cell.metric-diff .metric-cell-value { color: #d2a8ff; }
+    .metric-op { font-family: monospace; font-size: 0.95em; font-weight: 700; color: #8b949e; }
+
+    /* Archive button */
+    .archive-btn { padding: 9px 18px; border-radius: 5px; border: 1px solid #30363d; cursor: pointer; font-size: 0.95em; background: #161b22; color: #7d8590; transition: all 0.15s; margin-right: 12px; }
+    .archive-btn:hover { background: #3d1215; border-color: #f8514933; color: #f85149; }
+    .archive-btn.unarchive { background: #0d2818; border-color: #2ea04f33; color: #56d364; }
+    .archive-btn.unarchive:hover { background: #122117; border-color: #2ea04f; }
+    .archived-badge { font-size: 0.75em; padding: 2px 8px; background: #3d1215; border: 1px solid #f8514933; border-radius: 4px; color: #f85149; }
+
+    .loading { color: #7d8590; padding: 40px 0; text-align: center; font-size: 1em; }
+    .error { color: #f85149; padding: 16px; background: #2d1215; border: 1px solid #f8514933; border-radius: 8px; font-size: 0.9em; }
+    .empty { color: #7d8590; padding: 30px 0; text-align: center; font-style: italic; }
+
+    /* Image popup overlay */
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; cursor: pointer; }
+    .overlay.active { display: flex; }
+    .overlay img { max-width: 90%; max-height: 90%; border-radius: 8px; cursor: default; }
+    .overlay-close { position: fixed; top: 20px; right: 30px; color: #fff; font-size: 2em; cursor: pointer; z-index: 1001; }
+
+    /* Confirm modal */
+    .confirm-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 3000; justify-content: center; align-items: center; }
+    .confirm-overlay.active { display: flex; }
+    .confirm-box { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 28px 32px; max-width: 450px; width: 90%; text-align: center; }
+    .confirm-box h3 { color: #f0f6fc; margin-bottom: 12px; font-size: 1.2em; }
+    .confirm-box p { color: #7d8590; margin-bottom: 20px; font-size: 0.9em; line-height: 1.5; }
+    .confirm-box .confirm-name { color: #e6edf3; font-weight: 600; word-break: break-word; }
+    .confirm-buttons { display: flex; gap: 10px; justify-content: center; }
+    .confirm-buttons button { padding: 10px 24px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.9em; font-weight: 600; }
+    .confirm-cancel { background: #1c2333; color: #79c0ff; border: 1px solid #3b4c6b !important; }
+    .confirm-cancel:hover { background: #2d3a54; }
+    .confirm-yes { background: #da3633; color: #fff; }
+    .confirm-yes:hover { background: #f85149; }
+    .confirm-yes.unarchive-confirm { background: #238636; }
+    .confirm-yes.unarchive-confirm:hover { background: #2ea04f; }
+
+    /* Compare bar (sticky bottom) */
+    .compare-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #161b22; border-top: 2px solid #58a6ff; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; z-index: 900; transform: translateY(100%); transition: transform 0.2s; }
+    .compare-bar.visible { transform: translateY(0); }
+    .compare-bar-left { color: #e6edf3; font-size: 0.95em; }
+    .compare-bar-left strong { color: #58a6ff; }
+    .compare-bar-right { display: flex; gap: 10px; }
+    .btn { padding: 9px 20px; border-radius: 6px; border: 1px solid #3b4c6b; cursor: pointer; font-size: 0.9em; font-weight: 600; }
+    .btn-primary { background: #238636; border-color: #2ea04f; color: #fff; }
+    .btn-primary:hover { background: #2ea04f; }
+    .btn-secondary { background: #1c2333; color: #79c0ff; }
+    .btn-secondary:hover { background: #2d3a54; }
+    .btn-danger { background: #3d1215; color: #f85149; border-color: #f8514933; }
+    .btn-danger:hover { background: #5a1a1f; }
+
+    /* Compare modal */
+    .compare-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto; }
+    .compare-modal.active { display: block; }
+    .compare-modal-inner { max-width: 1200px; margin: 40px auto; padding: 32px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; }
+    .compare-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .compare-modal-header h2 { color: #f0f6fc; font-size: 1.4em; }
+    .compare-modal-close { background: none; border: none; color: #7d8590; font-size: 1.6em; cursor: pointer; padding: 4px 10px; }
+    .compare-modal-close:hover { color: #f0f6fc; }
+
+    /* Field picker */
+    .field-picker { margin-bottom: 20px; }
+    .field-picker label { font-size: 0.8em; color: #7d8590; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+    .field-search { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 10px 14px; color: #e6edf3; font-size: 0.9em; outline: none; margin-bottom: 8px; }
+    .field-search:focus { border-color: #58a6ff; }
+    .field-search::placeholder { color: #484f58; }
+    .field-list { max-height: 200px; overflow-y: auto; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+    .field-chip { padding: 5px 12px; background: #1c2333; border: 1px solid #3b4c6b; border-radius: 20px; color: #7d8590; font-size: 0.82em; cursor: pointer; transition: all 0.1s; user-select: none; }
+    .field-chip:hover { border-color: #58a6ff; color: #e6edf3; }
+    .field-chip.active { background: #1a3056; border-color: #58a6ff; color: #58a6ff; }
+    .selected-fields { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 28px; }
+    .selected-tag { padding: 4px 10px; background: #1a3056; border: 1px solid #58a6ff; border-radius: 14px; color: #79c0ff; font-size: 0.82em; display: flex; align-items: center; gap: 6px; }
+    .selected-tag .remove { cursor: pointer; font-weight: bold; opacity: 0.7; }
+    .selected-tag .remove:hover { opacity: 1; }
+
+    .generate-btn-wrap { margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
+    .normalize-toggle { display: flex; align-items: center; gap: 6px; color: #7d8590; font-size: 0.9em; cursor: pointer; user-select: none; }
+    .normalize-toggle input { accent-color: #58a6ff; width: 16px; height: 16px; cursor: pointer; }
+    .chart-container { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 16px; min-height: 300px; position: relative; }
+    .chart-placeholder { color: #484f58; text-align: center; padding: 60px 0; font-style: italic; }
+    .chart-loading { color: #7d8590; text-align: center; padding: 60px 0; }
+
+    /* Compare table */
+    .table-container { margin-top: 16px; }
+    .table-scroll { max-height: 520px; overflow: auto; border: 1px solid #30363d; border-radius: 8px; background: #0d1117; }
+    .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.85em; color: #e6edf3; white-space: nowrap; }
+    .compare-table th, .compare-table td { padding: 5px 10px; border-bottom: 1px solid #21262d; border-right: 1px solid #21262d; text-align: center; }
+    .compare-table thead th { position: sticky; background: #161b22; color: #f0f6fc; z-index: 2; font-weight: 600; }
+    .compare-table thead tr:first-child th { top: 0; text-align: center; border-bottom: 1px solid #30363d; }
+    .compare-table thead tr:last-child th { top: 29px; }
+    .compare-table th.run-head { color: #58a6ff; }
+    .compare-table .time-col { position: sticky; left: 0; background: #0d1117; text-align: center; z-index: 1; border-right: 1px solid #30363d; }
+    .compare-table thead .time-col { background: #161b22; z-index: 3; }
+    .compare-table tbody tr:hover td { background: #161b22; }
+    .compare-table tbody tr:hover td.time-col { background: #1c2129; }
+    .compare-table tr.avg-row td { background: #161b22; color: #d29922; font-weight: 600; border-top: 1px solid #30363d; }
+    .compare-table .group-start { border-left: 2px solid #58a6ff; }
+
+    /* Custom HTML legend for compare chart */
+    .html-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; padding: 14px 18px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; }
+    .html-legend:empty { display: none; }
+    .legend-group { padding: 10px 14px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; min-width: 200px; flex: 1; }
+    .legend-group-title { font-size: 0.95em; font-weight: 700; color: #f0f6fc; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #30363d; }
+    .legend-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 0.95em; color: #e6edf3; cursor: pointer; }
+    .legend-item:hover { opacity: 0.7; }
+    .legend-item.hidden { opacity: 0.3; text-decoration: line-through; }
+    .legend-item.static { cursor: default; }
+    .legend-item.static:hover { opacity: 1; }
+    .legend-color { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+    .legend-field { flex: 1; }
+    .legend-avg { font-size: 1.15em; font-weight: 700; color: #79c0ff; margin-left: 4px; }
+
+    @media (max-width: 700px) {
+      .run { flex-direction: column; align-items: flex-start; }
+      .run-body { flex-direction: column; }
+      .metric-rows { width: 100%; }
+      .controls { flex-direction: column; }
+      .compare-bar { flex-direction: column; gap: 10px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Scene Test Automation</h1>
+  <div class="subtitle">
+    <span>Test results dashboard — <a href="https://drive.google.com/drive/u/5/folders/1Ckhix2o8tbz3VA6i25UQ1jf7JKx5bkQD" target="_blank">&#128194; Google Drive Folder</a></span>
+    <button class="settings-btn" id="settingsBtn" onclick="toggleTokenPanel()" title="GitHub token settings (needed for archiving)">&#9881; Token</button>
+  </div>
+
+  <div class="token-panel" id="tokenPanel">
+    <label>GitHub PAT:</label>
+    <input type="password" id="tokenInput" placeholder="ghp_... or github_pat_...">
+    <button class="token-save" onclick="saveToken()">Save</button>
+    <button class="token-clear" onclick="clearToken()">Clear</button>
+    <div class="token-hint">A GitHub Personal Access Token with repo scope is required to archive/unarchive tests. Stored locally in your browser only.</div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Search by Name</label>
+      <input type="text" id="searchName" placeholder="e.g. texture test" oninput="applyFilters()">
+    </div>
+    <div class="control-group">
+      <label>Search by Scene</label>
+      <input type="text" id="searchScene" placeholder="e.g. Rampage arena" oninput="applyFilters()">
+    </div>
+    <div class="control-group">
+      <label>Search by User</label>
+      <input type="text" id="searchUser" placeholder="e.g. TheTripleL123" oninput="applyFilters()">
+    </div>
+    <div class="control-group">
+      <label>Search by Timestamp</label>
+      <input type="text" id="searchTime" placeholder="e.g. 03-03-26" oninput="applyFilters()">
+    </div>
+    <div class="sort-group">
+      <label>Sort by</label>
+      <div class="sort-row">
+        <select id="sortBy" onchange="applyFilters()">
+          <option value="timestamp">Timestamp</option>
+          <option value="test_name">Name</option>
+          <option value="scene_name">Scene</option>
+          <option value="started_by">User</option>
+          <option value="avg_gpu">GPU (average)</option>
+        </select>
+        <button id="sortDir" onclick="toggleSort()">&#8595; Newest</button>
+      </div>
+    </div>
+    <div class="show-archived-group">
+      <input type="checkbox" id="showArchived" onchange="applyFilters()">
+      <label for="showArchived">Show archived</label>
+    </div>
+  </div>
+
+  <div id="content"><p class="loading">Loading...</p></div>
+
+  <!-- Image popup -->
+  <div class="overlay" id="overlay" onclick="closePopup()">
+    <span class="overlay-close" onclick="closePopup()">&times;</span>
+    <img id="popup-img" src="" alt="Graph" onclick="event.stopPropagation()">
+  </div>
+
+  <!-- Archive confirmation modal -->
+  <div class="confirm-overlay" id="confirmOverlay" onclick="closeConfirm()">
+    <div class="confirm-box" onclick="event.stopPropagation()">
+      <h3 id="confirmTitle">Archive this test?</h3>
+      <p id="confirmBody">This will hide the test from the default view. You can unarchive it later.<br><br><span class="confirm-name" id="confirmName"></span></p>
+      <div class="confirm-buttons">
+        <button class="confirm-cancel" onclick="closeConfirm()">Cancel</button>
+        <button class="confirm-yes" id="confirmYes" onclick="confirmArchiveAction()">Archive</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compare bar -->
+  <div class="compare-bar" id="compareBar">
+    <div class="compare-bar-left"><strong id="compareCount">0</strong> tests selected</div>
+    <div class="compare-bar-right">
+      <button class="btn btn-danger" onclick="clearSelection()">Clear</button>
+      <button class="btn btn-primary" onclick="openCompareModal()">Compare</button>
+    </div>
+  </div>
+
+  <!-- Compare modal -->
+  <div class="compare-modal" id="compareModal">
+    <div class="compare-modal-inner">
+      <div class="compare-modal-header">
+        <h2>Compare Tests</h2>
+        <button class="compare-modal-close" onclick="closeCompareModal()">&times;</button>
+      </div>
+
+      <div class="field-picker">
+        <label>Search and select CSV fields to plot</label>
+        <input type="text" class="field-search" id="fieldSearch" placeholder="Type to filter... e.g. gpu, frag, vertex, alu" oninput="filterFields()">
+        <div class="field-list" id="fieldList"></div>
+        <div class="selected-fields" id="selectedFields"></div>
+      </div>
+
+      <div class="generate-btn-wrap">
+        <button class="btn btn-primary" onclick="generateCompareChart()">Generate Chart</button>
+        <button class="btn btn-primary" onclick="generateCompareTable()">Generate Table</button>
+        <button class="btn btn-danger" onclick="clearSelectedFields()" title="Clear the remembered field selection">Clear Fields</button>
+        <label class="normalize-toggle" title="Scale each metric to 0–1 (min–max) so differently-ranged metrics are comparable">
+          <input type="checkbox" id="normalizeToggle" onchange="onNormalizeToggle()"> Normalize
+        </label>
+      </div>
+
+      <div class="html-legend" id="htmlLegend"></div>
+
+      <div class="chart-container" id="chartContainer">
+        <p class="chart-placeholder">Select fields above and click Generate Chart</p>
+      </div>
+      <div class="table-container" id="tableContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    const REPO_OWNER = "TheTripleL123";
+    const REPO_NAME = "Scene-Test-Automation";
+    const BRANCH = "main";
+
+    const API_BASE = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents`;
+    const RAW = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
+
+    let allRuns = [];
+    let sortAscending = false;
+
+    // Compare state
+    const selectedRunIds = new Set();
+    let csvHeaders = [];
+    const selectedFieldNames = new Set();
+    let compareChart = null;
+
+    // Field selection survives page reloads, per repo.
+    const SELECTED_FIELDS_KEY = `compare_selected_fields_${REPO_NAME}`;
+
+    // Archive state
+    let pendingArchiveFolder = null;
+    let pendingArchiveAction = null; // "archive" or "unarchive"
+
+    // Distinct colorful list to prevent same color spectrum groupings
+    const DISTINCT_COLORS = [
+      "#3b82f6", // Vivid Blue
+      "#ef4444", // Vivid Red
+      "#10b981", // Emerald Green
+      "#a855f7", // Purple
+      "#f97316", // Orange
+      "#06b6d4", // Cyan
+      "#ec4899", // Pink
+      "#eab308", // Yellow
+      "#6366f1", // Indigo
+      "#14b8a6", // Teal
+      "#84cc16", // Lime
+      "#f43f5e", // Rose
+      "#0284c7", // Sky Blue
+      "#d97706", // Amber
+      "#b45309", // Burnt Orange
+      "#4d7c0f"  // Olive Green
+    ];
+
+    // Each test (run) gets one base color from DISTINCT_COLORS; when a test has
+    // multiple metrics selected, each metric gets a different lightness "tone"
+    // of that same base color, so a test stays recognizable while its metrics
+    // remain distinguishable.
+    function hexToHsl(hex) {
+      hex = hex.replace("#", "");
+      const r = parseInt(hex.substring(0, 2), 16) / 255;
+      const g = parseInt(hex.substring(2, 4), 16) / 255;
+      const b = parseInt(hex.substring(4, 6), 16) / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+      if (max === min) { h = s = 0; }
+      else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          default: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h: h * 360, s: s * 100, l: l * 100 };
+    }
+
+    // Returns an hsl() string: a lightness-shifted tone of the base color.
+    // With a single metric the base color is used unchanged.
+    function toneColor(baseHsl, fieldIdx, nFields) {
+      if (nFields <= 1) return `hsl(${baseHsl.h}, ${baseHsl.s}%, ${baseHsl.l}%)`;
+      const minL = Math.max(32, baseHsl.l - 22);
+      const maxL = Math.min(78, baseHsl.l + 22);
+      const t = fieldIdx / (nFields - 1);
+      const l = minL + (maxL - minL) * t;
+      return `hsl(${baseHsl.h}, ${baseHsl.s}%, ${l.toFixed(1)}%)`;
+    }
+    function toneColorAlpha(hsl, alpha) {
+      return hsl.replace("hsl(", "hsla(").replace(")", `, ${alpha})`);
+    }
+
+    let chartNormalized = false;
+
+    // ---- Token management ----
+    function getToken() {
+      return localStorage.getItem("github_GPU_token") || "";
+    }
+    function toggleTokenPanel() {
+      const panel = document.getElementById("tokenPanel");
+      panel.classList.toggle("visible");
+      if (panel.classList.contains("visible")) {
+        document.getElementById("tokenInput").value = getToken();
+      }
+    }
+    function saveToken() {
+      const token = document.getElementById("tokenInput").value.trim();
+      if (token) {
+        localStorage.setItem("github_GPU_token", token);
+        updateSettingsBtn();
+        toggleTokenPanel();
+      }
+    }
+    function clearToken() {
+      localStorage.removeItem("github_GPU_token");
+      document.getElementById("tokenInput").value = "";
+      updateSettingsBtn();
+    }
+    function updateSettingsBtn() {
+      const btn = document.getElementById("settingsBtn");
+      if (getToken()) {
+        btn.classList.add("has-token");
+        btn.innerHTML = "&#9881; Token &#10003;";
+      } else {
+        btn.classList.remove("has-token");
+        btn.innerHTML = "&#9881; Token";
+      }
+    }
+
+    // ---- Popup ----
+    function openPopup(url) {
+      document.getElementById("popup-img").src = url;
+      document.getElementById("overlay").classList.add("active");
+    }
+    function closePopup() {
+      document.getElementById("overlay").classList.remove("active");
+      document.getElementById("popup-img").src = "";
+    }
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") { closePopup(); closeCompareModal(); closeConfirm(); }
+    });
+
+    function forceDownload(url, filename) {
+      fetch(url).then(r => r.blob()).then(blob => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }).catch(err => alert("Download failed: " + err.message));
+    }
+
+    // Zips every file under the run's "Report Logs*" folders into one download.
+    async function downloadLogs(folderName) {
+      const run = allRuns.find(r => r.folder_name === folderName);
+      if (!run || run.log_files.length === 0) return;
+
+      const btn = document.getElementById(`logs-btn-${CSS.escape(folderName)}`);
+      if (btn) { btn.classList.add("downloading"); btn.innerHTML = "&#9203; Zipping..."; }
+
+      try {
+        const zip = new JSZip();
+        await Promise.all(run.log_files.map(async (f) => {
+          const url = `${RAW}/AllTestRuns/${encodeURIComponent(folderName)}/${encodeURIComponent(f.dir)}/${encodeURIComponent(f.name)}`;
+          const res = await fetch(url);
+          if (res.ok) zip.file(`${f.dir}/${f.name}`, await res.blob());
+        }));
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `Report_Logs_${run.test_name || "test"}.zip`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      } catch (err) {
+        alert("Failed to download logs: " + err.message);
+      } finally {
+        if (btn) { btn.classList.remove("downloading"); btn.innerHTML = `&#128220; Report Logs (${run.log_files.length})`; }
+      }
+    }
+
+    // ---- Sort ----
+    function toggleSort() {
+      sortAscending = !sortAscending;
+      updateSortLabel();
+      applyFilters();
+    }
+    function updateSortLabel() {
+      const btn = document.getElementById("sortDir");
+      const sortBy = document.getElementById("sortBy").value;
+      if (sortBy === "avg_gpu") btn.textContent = sortAscending ? "\u2191 Low first" : "\u2193 High first";
+      else if (sortBy === "timestamp") btn.textContent = sortAscending ? "\u2191 Oldest" : "\u2193 Newest";
+      else btn.textContent = sortAscending ? "\u2191 A\u2192Z" : "\u2193 Z\u2192A";
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("sortBy").addEventListener("change", updateSortLabel);
+      updateSettingsBtn();
+    });
+
+    // Parse "DD-MM-YYYY_HH-MM-SS" (or DD-MM-YY) into a sortable epoch ms.
+    function parseTimestamp(ts) {
+      if (!ts || ts === "-") return -Infinity;
+      const m = ts.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})(?:[_ ](\d{1,2})-(\d{1,2})-(\d{1,2}))?/);
+      if (!m) return -Infinity;
+      let [, d, mo, y, hh, mm, ss] = m;
+      y = parseInt(y, 10); if (y < 100) y += 2000;
+      const dt = new Date(y, parseInt(mo, 10) - 1, parseInt(d, 10),
+        parseInt(hh || "0", 10), parseInt(mm || "0", 10), parseInt(ss || "0", 10));
+      const t = dt.getTime();
+      return isNaN(t) ? -Infinity : t;
+    }
+
+    // ---- Filter & render ----
+    function applyFilters() {
+      updateSortLabel();
+      const nameQ = document.getElementById("searchName").value.toLowerCase();
+      const sceneQ = document.getElementById("searchScene").value.toLowerCase();
+      const userQ = document.getElementById("searchUser").value.toLowerCase();
+      const timeQ = document.getElementById("searchTime").value.toLowerCase();
+      const sortBy = document.getElementById("sortBy").value;
+      const showArchived = document.getElementById("showArchived").checked;
+
+      let filtered = allRuns.filter(r => {
+        // Hide archived unless toggled on
+        if (!showArchived && r.isArchived) return false;
+        if (nameQ && !r.test_name.toLowerCase().includes(nameQ)) return false;
+        if (sceneQ && !r.scene_name.toLowerCase().includes(sceneQ)) return false;
+        if (userQ && !(r.started_by || "").toLowerCase().includes(userQ)) return false;
+        if (timeQ && !r.timestamp.toLowerCase().includes(timeQ)) return false;
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        let valA, valB;
+        if (sortBy === "avg_gpu") {
+          valA = parseFloat(a.gpu) || 0; valB = parseFloat(b.gpu) || 0;
+          if (valA === 0 && valB !== 0) return 1;
+          if (valB === 0 && valA !== 0) return -1;
+        } else if (sortBy === "timestamp") {
+          valA = parseTimestamp(a.timestamp); valB = parseTimestamp(b.timestamp);
+          if (valA === -Infinity && valB !== -Infinity) return 1;
+          if (valB === -Infinity && valA !== -Infinity) return -1;
+        } else {
+          valA = (a[sortBy] || "").toLowerCase(); valB = (b[sortBy] || "").toLowerCase();
+          if (valA === "-" && valB !== "-") return 1;
+          if (valB === "-" && valA !== "-") return -1;
+          if (valA === "-" && valB === "-") return 0;
+        }
+        if (valA < valB) return sortAscending ? -1 : 1;
+        if (valA > valB) return sortAscending ? 1 : -1;
+        return 0;
+      });
+
+      renderRuns(filtered);
+    }
+
+    function renderRuns(runs) {
+      const container = document.getElementById("content");
+      if (runs.length === 0) { container.innerHTML = '<p class="empty">No matching tests found.</p>'; return; }
+
+      let html = "";
+      for (const r of runs) {
+        const isSelected = selectedRunIds.has(r.folder_name);
+        const selClass = isSelected ? " selected" : "";
+        const archivedClass = r.isArchived ? " archived" : "";
+        const checked = isSelected ? " checked" : "";
+
+        html += `<div class="run${selClass}${archivedClass}" id="run-${CSS.escape(r.folder_name)}">`;
+        html += `<input type="checkbox" class="run-checkbox"${checked} onchange="toggleRun('${escAttr(r.folder_name)}')">`;
+        html += `<div class="run-body">`;
+        html += `<div class="run-left">`;
+        html += `<div class="run-title">${esc(r.folder_name)}`;
+        if (r.isArchived) html += ` <span class="archived-badge">Archived</span>`;
+        html += `</div>`;
+        html += `<div class="run-meta">`;
+        html += `<div class="meta-tag">Name: <span>${esc(r.test_name)}</span></div>`;
+        html += `<div class="meta-tag">Scene: <span>${esc(r.scene_name)}</span></div>`;
+        if (r.started_by && r.started_by !== "-" && r.started_by !== "unknown") {
+          html += `<div class="meta-tag user-tag">User: <span>${esc(r.started_by)}</span></div>`;
+        }
+        html += `<div class="meta-tag">Started: <span>${esc(r.timestamp)}</span></div>`;
+
+        const commitFull = r.commit_sha || "";
+        const commitShort = commitFull ? commitFull.substring(0, 10) : "";
+        html += `<div class="meta-stack">`;
+        html += `<div class="meta-tag branch-tag">Branch: <span>${esc(r.commit_ref || "")}</span></div>`;
+        html += `<div class="meta-tag commit-tag" title="${escAttr(commitFull)}">Commit: <span>${esc(commitShort)}</span></div>`;
+        html += `</div>`;
+
+        html += `</div>`;
+        html += `<div class="files">`;
+
+        for (const file of r.files) {
+          const rawUrl = `${RAW}/AllTestRuns/${encodeURIComponent(r.folder_name)}/${file.name}`;
+          if (file.name.endsWith(".csv")) {
+            html += `<a class="file-link" href="#" onclick="forceDownload('${escAttr(rawUrl)}', '${escAttr(file.name)}'); return false;">&#128202; CSV Report</a>`;
+          } else if (file.name === "APP_TIME_GRAPH.png") {
+            html += `<a class="file-link" href="#" onclick="openPopup('${escAttr(rawUrl)}'); return false;">&#128200; GPU Graph</a>`;
+          }
+        }
+        if (r.drive_link) {
+          html += `<a class="file-link drive" href="${escAttr(r.drive_link)}" target="_blank">&#128194; Drive Folder</a>`;
+        }
+        // The uploader now ships one zip per log folder; older runs have loose
+        // files that downloadLogs() has to zip client-side.
+        const logZips = r.files.filter(f => f.name.startsWith("Report Logs") && f.name.endsWith(".zip"));
+        if (logZips.length > 0) {
+          for (const z of logZips) {
+            const zipUrl = `${RAW}/AllTestRuns/${encodeURIComponent(r.folder_name)}/${encodeURIComponent(z.name)}`;
+            const label = z.name.replace(/\.zip$/, "");
+            html += `<a class="file-link logs" href="#" onclick="forceDownload('${escAttr(zipUrl)}', '${escAttr(z.name)}'); return false;">&#128220; ${esc(label)}</a>`;
+          }
+        } else if (r.log_files.length > 0) {
+          html += `<a class="file-link logs" id="logs-btn-${CSS.escape(r.folder_name)}" href="#" onclick="downloadLogs('${escAttr(r.folder_name)}'); return false;">&#128220; Report Logs (${r.log_files.length})</a>`;
+        }
+        html += `</div></div>`; // close files + run-left
+
+        html += `<div class="run-right">`;
+        // Archive/Unarchive button
+        if (r.isArchived) {
+          html += `<button class="archive-btn unarchive" onclick="promptArchive('${escAttr(r.folder_name)}', 'unarchive'); event.stopPropagation();">Unarchive</button>`;
+        } else {
+          html += `<button class="archive-btn" onclick="promptArchive('${escAttr(r.folder_name)}', 'archive'); event.stopPropagation();">Archive</button>`;
+        }
+        // Screenshots
+        // Screenshots are uploaded as WebP; runs from before that switch have PNGs.
+        const screenshotLabels = { "SCREENSHOT_1": "pre-test", "SCREENSHOT_2": "mid-test", "SCREENSHOT_3": "post-test" };
+        const foundScreenshots = Object.keys(screenshotLabels)
+          .map(base => ({ label: screenshotLabels[base], file: r.files.find(f => f.name === `${base}.webp`) || r.files.find(f => f.name === `${base}.png`) }))
+          .filter(s => s.file);
+        if (foundScreenshots.length > 0) {
+          html += `<div class="screenshots-row">`;
+          for (const shot of foundScreenshots) {
+            const url = `${RAW}/AllTestRuns/${encodeURIComponent(r.folder_name)}/${shot.file.name}`;
+            html += `<div class="screenshot-slot">`;
+            html += `<span class="screenshot-label">${shot.label}</span>`;
+            html += `<div class="thumb-container" onclick="openPopup('${escAttr(url)}')"><img src="${escAttr(url)}" alt="${escAttr(shot.file.name)}" loading="lazy"></div>`;
+            html += `</div>`;
+          }
+          html += `</div>`;
+        }
+        html += `<div class="metric-rows">` +
+          metricRow("GPU", "AVERAGE", r.gpu_average, "MEDIAN", r.gpu_median, r.gpu_diff) +
+          `</div>`;
+        html += `</div>`; // close run-right
+
+        html += `</div></div>`; // close run-body + run
+      }
+      container.innerHTML = html;
+    }
+
+    // ---- Archive ----
+    // One metric as "<first> - <second> = <difference>". The term subtracted from comes
+    // first, so the difference stays positive.
+    function metricRow(metric, first, firstVal, second, secondVal, diffVal) {
+      const cell = (label, value, title, cls) =>
+        `<div class="metric-cell${cls || ""}" title="${escAttr(title)}">` +
+        `<div class="metric-cell-label">${esc(label)}</div>` +
+        `<div class="metric-cell-value">${esc(String(value == null ? "\u2014" : value))}</div></div>`;
+      const cap = w => w[0] + w.slice(1).toLowerCase();
+      return `<div class="metric-row">` +
+        `<div class="metric-name">${esc(metric)}</div>` +
+        cell(first, firstVal, `${metric} - ${cap(first)}`) +
+        `<div class="metric-op">-</div>` +
+        cell(second, secondVal, `${metric} - ${cap(second)}`) +
+        `<div class="metric-op">=</div>` +
+        cell("DIFF", diffVal,
+             `${metric} ${first.toLowerCase()} minus ${second.toLowerCase()}. A higher value means more spikes.`,
+             " metric-diff") +
+        `</div>`;
+    }
+
+    function promptArchive(folderName, action) {
+      const token = getToken();
+      if (!token) {
+        alert("Please set a GitHub token first (click the Token button at the top) to archive/unarchive tests.");
+        toggleTokenPanel();
+        return;
+      }
+      pendingArchiveFolder = folderName;
+      pendingArchiveAction = action;
+
+      const titleEl = document.getElementById("confirmTitle");
+      const bodyEl = document.getElementById("confirmBody");
+      const nameEl = document.getElementById("confirmName");
+      const yesBtn = document.getElementById("confirmYes");
+
+      nameEl.textContent = folderName;
+
+      if (action === "archive") {
+        titleEl.textContent = "Archive this test?";
+        bodyEl.innerHTML = 'This will hide the test from the default view. You can unarchive it later by enabling "Show archived".<br><br><span class="confirm-name" id="confirmName">' + esc(folderName) + '</span>';
+        yesBtn.textContent = "Archive";
+        yesBtn.className = "confirm-yes";
+      } else {
+        titleEl.textContent = "Unarchive this test?";
+        bodyEl.innerHTML = 'This will restore the test to the default view.<br><br><span class="confirm-name" id="confirmName">' + esc(folderName) + '</span>';
+        yesBtn.textContent = "Unarchive";
+        yesBtn.className = "confirm-yes unarchive-confirm";
+      }
+
+      document.getElementById("confirmOverlay").classList.add("active");
+    }
+
+    function closeConfirm() {
+      document.getElementById("confirmOverlay").classList.remove("active");
+      pendingArchiveFolder = null;
+      pendingArchiveAction = null;
+    }
+
+    async function confirmArchiveAction() {
+      if (!pendingArchiveFolder || !pendingArchiveAction) return;
+
+      const folderName = pendingArchiveFolder;
+      const isArchiving = pendingArchiveAction === "archive";
+      closeConfirm();
+
+      const token = getToken();
+      if (!token) return;
+
+      const headers = {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+      };
+
+      const repoPath = `AllTestRuns/${folderName}/metadata.json`;
+
+      try {
+        // Get current metadata
+        const getRes = await fetch(`${API_BASE}/${repoPath}`, { headers });
+        if (!getRes.ok) throw new Error(`Failed to fetch metadata (${getRes.status})`);
+        const fileData = await getRes.json();
+        const sha = fileData.sha;
+        const content = JSON.parse(atob(fileData.content));
+
+        // Update isArchived
+        content.isArchived = isArchiving;
+
+        const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2))));
+        const putRes = await fetch(`${API_BASE}/${repoPath}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({
+            message: `${isArchiving ? "Archive" : "Unarchive"} ${folderName}`,
+            content: newContent,
+            sha: sha,
+            branch: BRANCH,
+          }),
+        });
+
+        if (!putRes.ok) {
+          const errBody = await putRes.text();
+          throw new Error(`GitHub API error (${putRes.status}): ${errBody}`);
+        }
+
+        // Update local state
+        const run = allRuns.find(r => r.folder_name === folderName);
+        if (run) run.isArchived = isArchiving;
+        applyFilters();
+      } catch (err) {
+        alert(`Failed to ${isArchiving ? "archive" : "unarchive"}: ${err.message}`);
+      }
+    }
+
+    // ---- Selection / Compare bar ----
+    function toggleRun(folderName) {
+      if (selectedRunIds.has(folderName)) selectedRunIds.delete(folderName);
+      else selectedRunIds.add(folderName);
+      updateCompareBar();
+      applyFilters(); // re-render to update checked state
+    }
+    function clearSelection() {
+      selectedRunIds.clear();
+      updateCompareBar();
+      applyFilters();
+    }
+    function updateCompareBar() {
+      const bar = document.getElementById("compareBar");
+      const count = selectedRunIds.size;
+      document.getElementById("compareCount").textContent = count;
+      bar.classList.toggle("visible", count > 0);
+    }
+
+    // ---- Compare modal ----
+    function openCompareModal() {
+      if (selectedRunIds.size === 0) return;
+      loadSelectedFields();
+      if (compareChart) { compareChart.destroy(); compareChart = null; }
+      document.getElementById("chartContainer").style.display = "";
+      document.getElementById("chartContainer").innerHTML = '<p class="chart-placeholder">Select fields above and click Generate Chart</p>';
+      document.getElementById("htmlLegend").innerHTML = "";
+      document.getElementById("tableContainer").innerHTML = "";
+      document.getElementById("fieldSearch").value = "";
+      document.getElementById("compareModal").classList.add("active");
+      updateLiveLegend();
+      // Load CSV headers from the first selected run
+      loadCsvHeaders();
+    }
+    function closeCompareModal() {
+      document.getElementById("compareModal").classList.remove("active");
+    }
+
+    function loadSelectedFields() {
+      selectedFieldNames.clear();
+      try {
+        const stored = JSON.parse(localStorage.getItem(SELECTED_FIELDS_KEY) || "[]");
+        if (Array.isArray(stored)) stored.forEach(name => selectedFieldNames.add(name));
+      } catch (e) { /* corrupt entry - start empty */ }
+    }
+    function saveSelectedFields() {
+      localStorage.setItem(SELECTED_FIELDS_KEY, JSON.stringify(Array.from(selectedFieldNames)));
+    }
+    function clearSelectedFields() {
+      selectedFieldNames.clear();
+      localStorage.removeItem(SELECTED_FIELDS_KEY);
+      if (compareChart) { compareChart.destroy(); compareChart = null; }
+      document.getElementById("tableContainer").innerHTML = "";
+      const chartDiv = document.getElementById("chartContainer");
+      chartDiv.style.display = "";
+      chartDiv.innerHTML = '<p class="chart-placeholder">Select fields above and click Generate Chart</p>';
+      document.getElementById("htmlLegend").innerHTML = "";
+      renderFieldPicker();
+      updateLiveLegend();
+    }
+
+    // Legend for the current field selection, shown without a chart.
+    // While a chart exists it owns the legend, because its items toggle datasets.
+    let liveLegendToken = 0;
+
+    async function updateLiveLegend() {
+      if (compareChart) return;
+
+      const legendDiv = document.getElementById("htmlLegend");
+      const fields = Array.from(selectedFieldNames);
+      const runIds = Array.from(selectedRunIds);
+      if (fields.length === 0 || runIds.length === 0) { legendDiv.innerHTML = ""; return; }
+
+      const token = ++liveLegendToken;
+      const csvDataMap = {};
+      await Promise.allSettled(runIds.map(async id => {
+        csvDataMap[id] = await fetchCSV(id);
+      }));
+      if (token !== liveLegendToken || compareChart) return;
+
+      let html = "";
+      for (let runIdx = 0; runIdx < runIds.length; runIdx++) {
+        const runId = runIds[runIdx];
+        const csv = csvDataMap[runId];
+        if (!csv || csv.rows.length === 0) continue;
+        const filtered = csv.rows.filter(r => (r["Time Stamp"] || 0) >= 60000);
+        if (filtered.length === 0) continue;
+
+        // Same color scheme as the chart: one base color per test, tones per metric.
+        const baseHsl = hexToHsl(DISTINCT_COLORS[runIdx % DISTINCT_COLORS.length]);
+
+        html += `<div class="legend-group">`;
+        html += `<div class="legend-group-title">${esc(runShortLabel(runId))}</div>`;
+        for (let fieldIdx = 0; fieldIdx < fields.length; fieldIdx++) {
+          const field = fields[fieldIdx];
+          const values = filtered.map(r => r[field] || 0);
+          const avg = values.reduce((s, v) => s + v, 0) / values.length;
+          html += `<div class="legend-item static">`;
+          html += `<span class="legend-color" style="background:${toneColor(baseHsl, fieldIdx, fields.length)}"></span>`;
+          html += `<span class="legend-field">${esc(field)}</span>`;
+          html += `<span class="legend-avg">avg: ${Math.round(avg)}</span>`;
+          html += `</div>`;
+        }
+        html += `</div>`;
+      }
+      legendDiv.innerHTML = html;
+    }
+
+    async function loadCsvHeaders() {
+      if (csvHeaders.length > 0) { renderFieldPicker(); return; }
+      const firstRun = allRuns.find(r => selectedRunIds.has(r.folder_name));
+      if (!firstRun) return;
+      const csvFile = firstRun.files.find(f => f.name.endsWith(".csv"));
+      if (!csvFile) return;
+
+      const url = `${RAW}/AllTestRuns/${encodeURIComponent(firstRun.folder_name)}/${csvFile.name}`;
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const firstLine = text.split("\n")[0];
+        csvHeaders = firstLine.split(",").map(h => h.trim()).filter(h => h.length > 0);
+        renderFieldPicker();
+      } catch (e) {
+        document.getElementById("fieldList").innerHTML = '<span style="color:#f85149">Failed to load CSV headers</span>';
+      }
+    }
+
+    function renderFieldPicker() {
+      const query = (document.getElementById("fieldSearch").value || "").toLowerCase();
+      const container = document.getElementById("fieldList");
+
+      // Skip "Time Stamp" since it's the X axis
+      const filtered = csvHeaders.filter(h => h !== "Time Stamp" && h.toLowerCase().includes(query));
+
+      container.innerHTML = filtered.map(h => {
+        const activeClass = selectedFieldNames.has(h) ? " active" : "";
+        return `<span class="field-chip${activeClass}" onclick="toggleField('${escAttr(h)}')">${esc(h)}</span>`;
+      }).join("");
+
+      renderSelectedTags();
+    }
+
+    function filterFields() { renderFieldPicker(); }
+
+    function toggleField(name) {
+      if (selectedFieldNames.has(name)) selectedFieldNames.delete(name);
+      else selectedFieldNames.add(name);
+      saveSelectedFields();
+      renderFieldPicker();
+      updateLiveLegend();
+    }
+
+    function removeField(name) {
+      selectedFieldNames.delete(name);
+      saveSelectedFields();
+      renderFieldPicker();
+      updateLiveLegend();
+    }
+
+    function renderSelectedTags() {
+      const container = document.getElementById("selectedFields");
+      if (selectedFieldNames.size === 0) {
+        container.innerHTML = '<span style="color:#484f58;font-size:0.85em">No fields selected</span>';
+        return;
+      }
+      container.innerHTML = Array.from(selectedFieldNames).map(name =>
+        `<span class="selected-tag">${esc(name)} <span class="remove" onclick="removeField('${escAttr(name)}')">&times;</span></span>`
+      ).join("");
+    }
+
+    // ---- CSV parsing ----
+    const csvCache = {};
+    function fetchCSV(folderName) {
+      if (!csvCache[folderName]) csvCache[folderName] = fetchCSVUncached(folderName);
+      return csvCache[folderName];
+    }
+
+    async function fetchCSVUncached(folderName) {
+      const run = allRuns.find(r => r.folder_name === folderName);
+      if (!run) return null;
+      const csvFile = run.files.find(f => f.name.endsWith(".csv"));
+      if (!csvFile) return null;
+
+      const url = `${RAW}/AllTestRuns/${encodeURIComponent(folderName)}/${csvFile.name}`;
+      const res = await fetch(url);
+      const text = await res.text();
+      return parseCSV(text);
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split("\n");
+      if (lines.length < 2) return { headers: [], rows: [] };
+      const headers = lines[0].split(",").map(h => h.trim());
+      const rows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const vals = lines[i].split(",");
+        if (vals.length < headers.length) continue;
+        const row = {};
+        for (let j = 0; j < headers.length; j++) {
+          row[headers[j]] = parseFloat(vals[j]) || 0;
+        }
+        rows.push(row);
+      }
+      return { headers, rows };
+    }
+
+    // ---- Chart generation ----
+    // Track dataset metadata for legend toggling
+    let datasetMeta = []; // { runId, field, avg, color, datasetIndex }
+
+    async function generateCompareChart() {
+      if (selectedFieldNames.size === 0) {
+        alert("Please select at least one field to plot.");
+        return;
+      }
+
+      const chartDiv = document.getElementById("chartContainer");
+      chartDiv.style.display = "";
+      chartDiv.innerHTML = '<p class="chart-loading">Loading CSV data...</p>';
+      document.getElementById("htmlLegend").innerHTML = "";
+      document.getElementById("tableContainer").innerHTML = "";
+
+      const fields = Array.from(selectedFieldNames);
+      const runIds = Array.from(selectedRunIds);
+
+      // Fetch all CSVs in parallel
+      const csvDataMap = {};
+      await Promise.allSettled(runIds.map(async id => {
+        csvDataMap[id] = await fetchCSV(id);
+      }));
+
+      // Destroy old chart
+      if (compareChart) { compareChart.destroy(); compareChart = null; }
+
+      // Build chart
+      chartDiv.innerHTML = '<canvas id="compareCanvas"></canvas>';
+      const ctx = document.getElementById("compareCanvas").getContext("2d");
+
+      const datasets = [];
+      datasetMeta = [];
+
+      // Build a short label for each run
+      function shortLabel(folderId) {
+        const run = allRuns.find(r => r.folder_name === folderId);
+        if (!run) return folderId.substring(0, 30);
+        const parts = [];
+        if (run.test_name && run.test_name !== "-") parts.push(run.test_name);
+        if (run.timestamp && run.timestamp !== "-") parts.push(run.timestamp);
+        return parts.join(" | ") || folderId.substring(0, 30);
+      }
+
+      chartNormalized = document.getElementById("normalizeToggle").checked;
+
+      for (let runIdx = 0; runIdx < runIds.length; runIdx++) {
+        const runId = runIds[runIdx];
+        const csv = csvDataMap[runId];
+        if (!csv || csv.rows.length === 0) continue;
+
+        // One base color per test; metrics within the test are tones of it.
+        const baseColor = DISTINCT_COLORS[runIdx % DISTINCT_COLORS.length];
+        const baseHsl = hexToHsl(baseColor);
+
+        for (let fieldIdx = 0; fieldIdx < fields.length; fieldIdx++) {
+          const field = fields[fieldIdx];
+          const filtered = csv.rows.filter(r => (r["Time Stamp"] || 0) >= 60000);
+          if (filtered.length === 0) continue;
+
+          const rawValues = filtered.map(r => r[field] || 0);
+          const avg = rawValues.reduce((s, v) => s + v, 0) / rawValues.length;
+
+          // Min–max normalization to 0–1 so differently-scaled metrics line up.
+          let values = rawValues;
+          if (chartNormalized) {
+            let mn = Infinity, mx = -Infinity;
+            for (const v of rawValues) { if (v < mn) mn = v; if (v > mx) mx = v; }
+            const range = mx - mn;
+            values = range === 0 ? rawValues.map(() => 0) : rawValues.map(v => (v - mn) / range);
+          }
+
+          const color = toneColor(baseHsl, fieldIdx, fields.length);
+
+          const dsIndex = datasets.length;
+          const label = `${field} - ${shortLabel(runId)} (avg: ${Math.round(avg)})`;
+
+          datasets.push({
+            label,
+            data: values,
+            borderColor: color,
+            backgroundColor: toneColorAlpha(color, 0.12),
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.2,
+          });
+
+          datasetMeta.push({ runId, field, avg: Math.round(avg), color, datasetIndex: dsIndex, rawValues });
+        }
+      }
+
+      if (datasets.length === 0) {
+        chartDiv.innerHTML = '<p class="chart-placeholder">No data found for the selected fields.</p>';
+        return;
+      }
+
+      // Use the longest time axis
+      let longestTimes = [];
+      for (const runId of runIds) {
+        const csv = csvDataMap[runId];
+        if (!csv) continue;
+        const filtered = csv.rows.filter(r => (r["Time Stamp"] || 0) >= 60000);
+        const t = filtered.map(r => (r["Time Stamp"] / 1000).toFixed(1));
+        if (t.length > longestTimes.length) longestTimes = t;
+      }
+
+      compareChart = new Chart(ctx, {
+        type: "line",
+        data: { labels: longestTimes, datasets },
+        options: {
+          responsive: true,
+          animation: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { display: false }, // we use custom HTML legend
+            tooltip: {
+              backgroundColor: "#161b22",
+              titleColor: "#f0f6fc",
+              titleFont: { size: 14, weight: "bold" },
+              bodyColor: "#e6edf3",
+              bodyFont: { size: 13 },
+              bodySpacing: 10,
+              padding: 16,
+              borderColor: "#30363d",
+              borderWidth: 1,
+              boxPadding: 6,
+              callbacks: {
+                label: function(ctx) {
+                  const meta = datasetMeta[ctx.datasetIndex];
+                  if (!meta) return ctx.dataset.label;
+                  if (chartNormalized && meta.rawValues) {
+                    const raw = meta.rawValues[ctx.dataIndex];
+                    return `  ${meta.field}: ${raw != null ? raw.toFixed(1) : "?"} (norm ${ctx.formattedValue})   (avg: ${meta.avg})`;
+                  }
+                  return `  ${meta.field}: ${ctx.formattedValue}   (avg: ${meta.avg})`;
+                },
+                labelColor: function(ctx) {
+                  return { borderColor: ctx.dataset.borderColor, backgroundColor: ctx.dataset.borderColor, borderWidth: 2, borderRadius: 2 };
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: "Time (seconds)", color: "#7d8590" },
+              ticks: { color: "#7d8590", maxTicksLimit: 20 },
+              grid: { color: "#21262d" }
+            },
+            y: {
+              title: { display: true, text: chartNormalized ? "Normalized (0–1)" : fields.join(" / "), color: "#7d8590" },
+              ticks: { color: "#7d8590" },
+              grid: { color: "#21262d" }
+            }
+          }
+        }
+      });
+
+      // Render custom HTML legend grouped by test
+      renderHtmlLegend(runIds, fields, shortLabel);
+    }
+
+
+    function runShortLabel(folderId) {
+      const run = allRuns.find(r => r.folder_name === folderId);
+      if (!run) return folderId.substring(0, 30);
+      const parts = [];
+      if (run.test_name && run.test_name !== "-") parts.push(run.test_name);
+      if (run.timestamp && run.timestamp !== "-") parts.push(run.timestamp);
+      return parts.join(" | ") || folderId.substring(0, 30);
+    }
+
+    function formatCell(v) {
+      if (v == null || Number.isNaN(v)) return "";
+      return Number.isInteger(v) ? String(v) : v.toFixed(2);
+    }
+
+    // Cuts the selected fields out of each selected run's CSV and shows them as a table.
+    // A table and a chart never coexist - generating one clears the other.
+    async function generateCompareTable() {
+      if (selectedFieldNames.size === 0) {
+        alert("Please select at least one field to tabulate.");
+        return;
+      }
+
+      const tableDiv = document.getElementById("tableContainer");
+      tableDiv.innerHTML = '<p class="chart-loading">Loading CSV data...</p>';
+
+      if (compareChart) { compareChart.destroy(); compareChart = null; }
+      document.getElementById("htmlLegend").innerHTML = "";
+      document.getElementById("chartContainer").style.display = "none";
+
+      const fields = Array.from(selectedFieldNames);
+      const runIds = Array.from(selectedRunIds);
+
+      const csvDataMap = {};
+      await Promise.allSettled(runIds.map(async id => {
+        csvDataMap[id] = await fetchCSV(id);
+      }));
+
+      const groups = [];
+      let times = [];
+      for (const runId of runIds) {
+        const csv = csvDataMap[runId];
+        if (!csv || csv.rows.length === 0) continue;
+        const filtered = csv.rows.filter(r => (r["Time Stamp"] || 0) >= 60000);
+        if (filtered.length === 0) continue;
+        if (filtered.length > times.length) times = filtered.map(r => (r["Time Stamp"] / 1000).toFixed(1));
+
+        const columns = fields.map(field => {
+          const values = filtered.map(r => r[field] || 0);
+          const avg = values.reduce((s, v) => s + v, 0) / values.length;
+          return { field, values, avg };
+        });
+        groups.push({ runId, columns });
+      }
+
+      if (groups.length === 0) {
+        tableDiv.innerHTML = '<p class="chart-placeholder">No data found for the selected fields.</p>';
+        return;
+      }
+
+      let html = '<div class="table-scroll"><table class="compare-table"><thead>';
+
+      // Every group but the first opens with a divider, so tests read apart.
+      const divider = (groupIdx, colIdx) => (groupIdx > 0 && colIdx === 0) ? " group-start" : "";
+
+      html += '<tr><th class="time-col" rowspan="2">Time (s)</th>';
+      groups.forEach((g, gi) => {
+        html += `<th class="run-head${divider(gi, 0)}" colspan="${g.columns.length}">${esc(runShortLabel(g.runId))}</th>`;
+      });
+      html += '</tr><tr>';
+      groups.forEach((g, gi) => g.columns.forEach((c, ci) => {
+        html += `<th class="${divider(gi, ci).trim()}">${esc(c.field)}</th>`;
+      }));
+      html += '</tr></thead><tbody>';
+
+      for (let i = 0; i < times.length; i++) {
+        html += `<tr><td class="time-col">${esc(times[i])}</td>`;
+        groups.forEach((g, gi) => g.columns.forEach((c, ci) => {
+          html += `<td class="${divider(gi, ci).trim()}">${formatCell(c.values[i])}</td>`;
+        }));
+        html += '</tr>';
+      }
+
+      html += '<tr class="avg-row"><td class="time-col">Average</td>';
+      groups.forEach((g, gi) => g.columns.forEach((c, ci) => {
+        html += `<td class="${divider(gi, ci).trim()}">${formatCell(c.avg)}</td>`;
+      }));
+      html += '</tr>';
+
+      html += '</tbody></table></div>';
+      tableDiv.innerHTML = html;
+
+      updateLiveLegend();
+    }
+
+    function renderHtmlLegend(runIds, fields, shortLabel) {
+      const container = document.getElementById("htmlLegend");
+      let html = "";
+
+      for (const runId of runIds) {
+        const items = datasetMeta.filter(m => m.runId === runId);
+        if (items.length === 0) continue;
+
+        html += `<div class="legend-group">`;
+        html += `<div class="legend-group-title">${esc(shortLabel(runId))}</div>`;
+        for (const item of items) {
+          html += `<div class="legend-item" data-ds="${item.datasetIndex}" onclick="toggleDataset(${item.datasetIndex})">`;
+          html += `<span class="legend-color" style="background:${item.color}"></span>`;
+          html += `<span class="legend-field">${esc(item.field)}</span>`;
+          html += `<span class="legend-avg">avg: ${item.avg}</span>`;
+          html += `</div>`;
+        }
+        html += `</div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    // Re-render the chart when the normalize toggle flips, but only if one exists.
+    function onNormalizeToggle() {
+      if (compareChart) generateCompareChart();
+    }
+
+    function toggleDataset(dsIndex) {
+      if (!compareChart) return;
+      const meta = compareChart.getDatasetMeta(dsIndex);
+      meta.hidden = !meta.hidden;
+      compareChart.update();
+      // Update legend item style
+      const el = document.querySelector(`.legend-item[data-ds="${dsIndex}"]`);
+      if (el) el.classList.toggle("hidden", meta.hidden);
+    }
+
+    // ---- Helpers ----
+    function esc(s) {
+      const d = document.createElement("div"); d.textContent = s; return d.innerHTML;
+    }
+    function escAttr(s) {
+      return s.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    }
+
+    // ---- Load data ----
+    // Uses the Git Trees API (1 single API call for the entire repo) to avoid rate limits.
+    // Metadata is fetched from raw.githubusercontent.com which has no API rate limit.
+    async function load() {
+      const container = document.getElementById("content");
+      try {
+        // Single API call: fetch the full repo tree recursively
+        const treeUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/git/trees/${BRANCH}?recursive=1`;
+        const res = await fetch(treeUrl);
+
+        if (res.status === 403) {
+          const rateLimitReset = res.headers.get("X-RateLimit-Reset");
+          let waitMsg = "";
+          if (rateLimitReset) {
+            const resetDate = new Date(parseInt(rateLimitReset) * 1000);
+            const mins = Math.ceil((resetDate - Date.now()) / 60000);
+            waitMsg = ` Resets in ~${mins} minute${mins !== 1 ? "s" : ""}.`;
+          }
+          container.innerHTML = `<div class="error">GitHub API rate limit reached (60 requests/hour for unauthenticated users).${waitMsg} Try refreshing later.</div>`;
+          return;
+        }
+        if (!res.ok) throw new Error(`API returned ${res.status}`);
+
+        const tree = (await res.json()).tree || [];
+
+        // Parse the tree to find folders and files under AllTestRuns/
+        const folderFiles = {}; // { folderName: [filename, ...] }
+        const folderLogFiles = {}; // { folderName: [{ dir, name }, ...] }
+        for (const item of tree) {
+          if (!item.path.startsWith("AllTestRuns/")) continue;
+          const parts = item.path.replace("AllTestRuns/", "").split("/");
+          if (parts.length === 2 && item.type === "blob") {
+            const folder = parts[0];
+            const file = parts[1];
+            if (!folderFiles[folder]) folderFiles[folder] = [];
+            folderFiles[folder].push(file);
+          }
+          // Log subfolders vary per run ("Report Logs", "Report Logs RenderDoc").
+          if (parts.length === 3 && parts[1].startsWith("Report Logs") && item.type === "blob") {
+            const folder = parts[0];
+            if (!folderLogFiles[folder]) folderLogFiles[folder] = [];
+            folderLogFiles[folder].push({ dir: parts[1], name: parts[2] });
+          }
+        }
+
+        const folderNames = Object.keys(folderFiles);
+        if (folderNames.length === 0) { container.innerHTML = '<p class="empty">No test runs yet.</p>'; return; }
+
+        // Fetch all metadata.json files in parallel from raw.githubusercontent (no API rate limit)
+        allRuns = [];
+        const metaPromises = folderNames.map(async folder => {
+          const files = folderFiles[folder].filter(f => !f.endsWith(".json"));
+
+          let gpuAverage = "\u2014", gpuMedian = "\u2014", gpuDiff = "\u2014";
+          let driveLink = null, testName = "-", sceneName = "-", timestamp = "-", hasThumbnail = false, startedBy = "-", isArchived = false;
+          let commitSha = null, commitRef = null;
+
+          if (folderFiles[folder].includes("metadata.json")) {
+            try {
+              const metaRes = await fetch(`${RAW}/AllTestRuns/${encodeURIComponent(folder)}/metadata.json?t=${Date.now()}`);
+              if (metaRes.ok) {
+                const meta = JSON.parse((await metaRes.text()).trim());
+                // Older runs carry one headline number (the worst 10%, or before that a
+                // plain average). Show whichever they have in the average slot rather than
+                // a dash; the median and difference stay empty.
+                gpuAverage = meta.gpu_average || meta.gpu_worst_10pct || meta.avg_gpu || "\u2014";
+                gpuMedian = meta.gpu_median || "\u2014";
+                gpuDiff = meta.gpu_diff || "\u2014";
+                driveLink = meta.drive_link || null;
+                testName = meta.test_name || "-";
+                sceneName = meta.scene_name || "-";
+                timestamp = meta.timestamp || "-";
+                hasThumbnail = meta.has_thumbnail || false;
+                startedBy = meta.started_by || "-";
+                isArchived = meta.isArchived || false;
+                commitSha = (meta.commit_sha && meta.commit_sha !== "-") ? meta.commit_sha : null;
+                commitRef = (meta.commit_ref && meta.commit_ref !== "-") ? meta.commit_ref : null;
+              }
+            } catch (e) {}
+          }
+
+          return {
+            folder_name: folder,
+            files: files.map(f => ({ name: f })),
+            log_files: folderLogFiles[folder] || [],
+            gpu: gpuAverage,
+            gpu_average: gpuAverage,
+            gpu_median: gpuMedian,
+            gpu_diff: gpuDiff,
+            drive_link: driveLink,
+            test_name: testName,
+            scene_name: sceneName,
+            timestamp: timestamp,
+            has_thumbnail: hasThumbnail,
+            started_by: startedBy,
+            isArchived: isArchived,
+            commit_sha: commitSha,
+            commit_ref: commitRef,
+          };
+        });
+
+        allRuns = await Promise.all(metaPromises);
+        allRuns.reverse();
+        applyFilters();
+      } catch (err) {
+        container.innerHTML = `<div class="error">Failed to load: ${err.message}</div>`;
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

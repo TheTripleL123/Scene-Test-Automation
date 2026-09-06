@@ -1,0 +1,16 @@
+{
+  "gpu_average": "17736",
+  "gpu_median": "17638",
+  "gpu_diff": "97",
+  "test_name": "first_test_2",
+  "scene_name": "Joint",
+  "timestamp": "31-08-2026_12-12-38",
+  "has_thumbnail": true,
+  "started_by": "TheTripleL123",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/15tlzeyvTqGHUVHebfcUniVmROXm8jed7",
+  "github_run_id": "33376196863",
+  "commit_sha": "f2874598e24ec02b8c0cac476f9ea3dd47f0d45c",
+  "commit_ref": "PlayerGPUAutomation/first_test/Scene-Joint-Date_30-08-2026_19-32-51",
+  "test_successful": true
+}

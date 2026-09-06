@@ -1,0 +1,41 @@
+[
+  {
+    "timestamp": "27-08-2026_06-14-25",
+    "test_name": "Daily Run - Red Cage",
+    "scene_name": "Red Cage",
+    "started_by": "Nightly",
+    "commit_sha": "d1f9a0a0505f1dba7b5adb2ec9519ba0a5783249",
+    "commit_ref": "master",
+    "github_run_id": "33026053541",
+    "gpu_average": "16955",
+    "gpu_median": "16951",
+    "gpu_diff": "4",
+    "folder_name": "GPU TEST - Name(Daily Run - Red Cage) - On scene(Red Cage) - Started at(27-08-2026_06-14-25)"
+  },
+  {
+    "timestamp": "27-08-2026_06-19-58",
+    "test_name": "Daily Run - Cage Twins",
+    "scene_name": "Cage Twins",
+    "started_by": "Nightly",
+    "commit_sha": "d1f9a0a0505f1dba7b5adb2ec9519ba0a5783249",
+    "commit_ref": "master",
+    "github_run_id": "33026053541",
+    "gpu_average": "15530",
+    "gpu_median": "15535",
+    "gpu_diff": "-5",
+    "folder_name": "GPU TEST - Name(Daily Run - Cage Twins) - On scene(Cage Twins) - Started at(27-08-2026_06-19-58)"
+  },
+  {
+    "timestamp": "27-08-2026_06-25-34",
+    "test_name": "Daily Run - Joint",
+    "scene_name": "Joint",
+    "started_by": "Nightly",
+    "commit_sha": "d1f9a0a0505f1dba7b5adb2ec9519ba0a5783249",
+    "commit_ref": "master",
+    "github_run_id": "33026053541",
+    "gpu_average": "17894",
+    "gpu_median": "18207",
+    "gpu_diff": "-313",
+    "folder_name": "GPU TEST - Name(Daily Run - Joint) - On scene(Joint) - Started at(27-08-2026_06-25-34)"
+  }
+]

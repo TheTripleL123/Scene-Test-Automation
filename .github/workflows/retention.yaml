@@ -1,0 +1,99 @@
+name: Retention
+
+# Keeps this repo small. One daily job:
+#   * prune  — drop run folders older than RETENTION_DAYS, recording the numbers of the
+#              successful nightly ones in performance-history.json first
+#   * squash — rebuild the branch as a single commit
+#
+# The squash is the part that actually reclaims space: git keeps every blob it
+# has ever seen, so deleting a run folder shrinks the checkout but not the pack.
+# Only replacing history drops the old screenshots for good. Nothing here is worth
+# keeping in history — the dashboard reads the current tree only, and index.html and
+# the performance history are the sole source files, all of which survive the rewrite.
+#
+# Both run in one step because the squash has to force-push, and a force-push that
+# lands mid-upload would drop that run's files. --force-with-lease turns that race
+# into a refused push instead of silent data loss, and the loop then starts over from
+# whatever the remote now holds. 20:00 UTC is the quiet slot: the nightly starts at
+# 23:00 UTC and its tests are done by ~02:00 UTC.
+
+on:
+  schedule:
+    - cron: "0 20 * * *"   # 20:00 UTC daily (23:00 Israel)
+  workflow_dispatch:
+    inputs:
+      retention_days:
+        description: "Days of runs to keep"
+        required: false
+        default: "10"
+      squash:
+        description: "Also squash history to a single commit"
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  retention:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prune old runs and squash history
+        env:
+          RETENTION_DAYS: ${{ github.event.inputs.retention_days || '10' }}
+          # Defaults to on for the schedule, which has no inputs at all.
+          SQUASH: ${{ github.event.inputs.squash == 'false' && 'false' || 'true' }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          branch="${GITHUB_REF_NAME}"
+
+          for attempt in 1 2 3; do
+            # Start every attempt from what the remote actually holds: an upload may have
+            # landed since the last one, and its files have to survive the rewrite.
+            git fetch --depth=1 origin "$branch"
+            git checkout -B "$branch" "origin/$branch"
+            base=$(git rev-parse HEAD)
+
+            python .github/scripts/retention.py
+
+            if [ "$SQUASH" != "true" ]; then
+              # git diff alone would miss performance-history.json the first time, since
+              # an untracked file is not a diff.
+              if [ -z "$(git status --porcelain)" ]; then
+                echo "Nothing pruned."
+                exit 0
+              fi
+              git add -A
+              git commit -m "Prune runs past retention window"
+              if git push origin "HEAD:refs/heads/$branch"; then
+                exit 0
+              fi
+            else
+              git checkout --orphan "squashed-$attempt"
+              git add -A
+              git commit -m "Test data snapshot ($(date -u +%Y-%m-%d)) - history squashed"
+              if git push --force-with-lease="refs/heads/$branch:$base" origin "HEAD:refs/heads/$branch"; then
+                echo "$branch is now a single commit; GitHub reclaims the old pack on its next gc."
+                exit 0
+              fi
+            fi
+
+            echo "Push attempt $attempt was refused - the branch moved since the fetch. Retrying."
+            sleep 15
+          done
+
+          echo "::error::Could not land the retention push after 3 attempts."
+          exit 1
