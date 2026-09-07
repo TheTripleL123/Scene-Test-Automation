@@ -1,0 +1,16 @@
+{
+  "gpu_average": "15626",
+  "gpu_median": "15645",
+  "gpu_diff": "-19",
+  "test_name": "Daily Run - Cage Twins",
+  "scene_name": "Cage Twins",
+  "timestamp": "07-09-2026_05-12-22",
+  "has_thumbnail": true,
+  "started_by": "Nightly",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1UmI6czyxTd2hC-XcJBbjw8Or3mZajjAe",
+  "github_run_id": "34066032763",
+  "commit_sha": "ef5603fd23ef8fb8bd9feb4526363aa2dd8d26f6",
+  "commit_ref": "master",
+  "test_successful": true
+}
