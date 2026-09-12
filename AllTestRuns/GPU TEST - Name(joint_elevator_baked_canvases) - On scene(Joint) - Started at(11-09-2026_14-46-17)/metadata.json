@@ -1,0 +1,18 @@
+{
+  "gpu_average": "8511",
+  "gpu_median": "8500",
+  "gpu_diff": "11",
+  "test_name": "joint_elevator_baked_canvases",
+  "scene_name": "Joint",
+  "timestamp": "11-09-2026_14-46-17",
+  "has_thumbnail": true,
+  "started_by": "matanberstadt",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1-IN1oTwBQ6T8N8NBOiyCywinXE7TTiXs",
+  "github_run_id": "34595283890",
+  "errors": 31,
+  "exceptions": 0,
+  "commit_sha": "f3ff2f519dfc0ce4fc5b92b60090b53862cbb996",
+  "commit_ref": "PlainGPUAutomation/joint_elevator_baked_canvases/Scene-Joint-Date_11-09-2026_11-50-34",
+  "test_successful": true
+}

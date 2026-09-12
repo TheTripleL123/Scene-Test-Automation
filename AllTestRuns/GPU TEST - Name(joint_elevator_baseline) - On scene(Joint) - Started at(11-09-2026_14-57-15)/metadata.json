@@ -1,0 +1,18 @@
+{
+  "gpu_average": "8652",
+  "gpu_median": "8655",
+  "gpu_diff": "-3",
+  "test_name": "joint_elevator_baseline",
+  "scene_name": "Joint",
+  "timestamp": "11-09-2026_14-57-15",
+  "has_thumbnail": true,
+  "started_by": "matanberstadt",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1kCBfUfKaq8HelCErMP8PprOp0StfZ2JM",
+  "github_run_id": "34595696729",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "578ef82a67cf30ed2f24308ffaa208cacf8ba06e",
+  "commit_ref": "PlainGPUAutomation/joint_elevator_baseline/Scene-Joint-Date_11-09-2026_11-43-46",
+  "test_successful": true
+}
