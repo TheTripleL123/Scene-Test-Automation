@@ -1,0 +1,18 @@
+{
+  "gpu_average": "2264",
+  "gpu_median": "2271",
+  "gpu_diff": "-7",
+  "test_name": "BG_at_half",
+  "scene_name": "Joint",
+  "timestamp": "13-09-2026_14-34-40",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1as9YWXHzPTev11MCIX5rxBJipZsOMmFj",
+  "github_run_id": "34754472076",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "d0a22c713d346ab5c515f1e2eee7c159a4009491",
+  "commit_ref": "PlainGPUAutomation/BG_at_half/Scene-Joint-Date_13-09-2026_13-21-55",
+  "test_successful": true
+}

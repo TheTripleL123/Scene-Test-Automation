@@ -1,0 +1,18 @@
+{
+  "gpu_average": "14953",
+  "gpu_median": "14837",
+  "gpu_diff": "116",
+  "test_name": "half_toon_ao_half",
+  "scene_name": "Joint",
+  "timestamp": "11-09-2026_17-42-26",
+  "has_thumbnail": true,
+  "started_by": "matanberstadt",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1Q2YC-Q5o21ZRgE52VeGuutIEeJSs1Djl",
+  "github_run_id": "34611209503",
+  "errors": 33,
+  "exceptions": 0,
+  "commit_sha": "3be6da0529e82086f63174c86325cbae7a3cb81f",
+  "commit_ref": "PlainGPUAutomation/half_toon_ao_half/Scene-Joint-Date_11-09-2026_13-50-23",
+  "test_successful": true
+}

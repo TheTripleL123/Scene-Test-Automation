@@ -1,0 +1,16 @@
+{
+  "gpu_average": "15260",
+  "gpu_median": "15261",
+  "gpu_diff": "-1",
+  "test_name": "no_city_bg._no_skeysphere",
+  "scene_name": "Joint",
+  "timestamp": "07-09-2026_12-35-29",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1K1x08Rt5OEN9gVI8W3ZXlKNfv707CUzi",
+  "github_run_id": "34104667773",
+  "commit_sha": "de936cbc4a86b2633c1552f94218dfce61388f48",
+  "commit_ref": "PlayerGPUAutomation/no_city_bg._no_skeysphere/Scene-Joint-Date_07-09-2026_11-21-08",
+  "test_successful": true
+}

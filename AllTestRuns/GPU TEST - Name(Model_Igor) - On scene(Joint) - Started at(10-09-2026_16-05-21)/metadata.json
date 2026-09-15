@@ -1,0 +1,17 @@
+{
+  "gpu_average": "6475",
+  "gpu_median": "6470",
+  "gpu_diff": "5",
+  "test_name": "Model_Igor",
+  "scene_name": "Joint",
+  "timestamp": "10-09-2026_16-05-21",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "github_run_id": "34479980281",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "58d57500c8bb0158678db2d1c967343960eb692b",
+  "commit_ref": "PlainGPUAutomation/Model_Igor/Scene-Joint-Date_10-09-2026_15-03-48",
+  "test_successful": true
+}

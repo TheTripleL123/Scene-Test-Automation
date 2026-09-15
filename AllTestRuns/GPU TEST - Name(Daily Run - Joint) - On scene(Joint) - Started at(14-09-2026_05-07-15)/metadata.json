@@ -1,0 +1,18 @@
+{
+  "gpu_average": "22335",
+  "gpu_median": "22380",
+  "gpu_diff": "-44",
+  "test_name": "Daily Run - Joint",
+  "scene_name": "Joint",
+  "timestamp": "14-09-2026_05-07-15",
+  "has_thumbnail": true,
+  "started_by": "Nightly",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1NJGpEiRypa_r8YtYdtZhz73Kvk7cXVkD",
+  "github_run_id": "34788846217",
+  "errors": 75,
+  "exceptions": 0,
+  "commit_sha": "61a3458a9c660bf8d67ff447e3b543de9d4ab31d",
+  "commit_ref": "master",
+  "test_successful": true
+}

@@ -1,0 +1,18 @@
+{
+  "gpu_average": "13805",
+  "gpu_median": "13809",
+  "gpu_diff": "-4",
+  "test_name": "Default_Shot_-_1_-_Shader_Minors",
+  "scene_name": "Joint",
+  "timestamp": "14-09-2026_13-39-17",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1g331obvZbmyIRuDaIoCsmwpYrVw6voE7",
+  "github_run_id": "34833822788",
+  "errors": 33,
+  "exceptions": 0,
+  "commit_sha": "87f113b7494931367275cd23357ade9b30887a41",
+  "commit_ref": "PlainGPUAutomation/Default_Shot_-_1_-_Shader_Minors/Scene-Joint-Date_14-09-2026_10-30-02",
+  "test_successful": true
+}

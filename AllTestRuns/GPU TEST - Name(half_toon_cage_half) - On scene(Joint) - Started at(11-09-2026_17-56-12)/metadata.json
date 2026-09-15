@@ -1,0 +1,18 @@
+{
+  "gpu_average": "15031",
+  "gpu_median": "14860",
+  "gpu_diff": "171",
+  "test_name": "half_toon_cage_half",
+  "scene_name": "Joint",
+  "timestamp": "11-09-2026_17-56-12",
+  "has_thumbnail": true,
+  "started_by": "matanberstadt",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1KUmOmIMm8-xluuXkfmO-XTfOwxHhVBC8",
+  "github_run_id": "34612557570",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "b079cb92847ae5334e92a4348df7bc937526c68c",
+  "commit_ref": "PlainGPUAutomation/half_toon_cage_half/Scene-Joint-Date_11-09-2026_14-05-49",
+  "test_successful": true
+}

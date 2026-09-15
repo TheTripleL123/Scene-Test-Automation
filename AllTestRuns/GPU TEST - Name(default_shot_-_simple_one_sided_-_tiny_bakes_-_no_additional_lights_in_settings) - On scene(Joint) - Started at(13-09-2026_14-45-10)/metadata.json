@@ -1,0 +1,16 @@
+{
+  "gpu_average": "11342",
+  "gpu_median": "11334",
+  "gpu_diff": "9",
+  "test_name": "default_shot_-_simple_one_sided_-_tiny_bakes_-_no_additional_lights_in_settings",
+  "scene_name": "Joint",
+  "timestamp": "13-09-2026_14-45-10",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1q-9o0Vk4RnZ5sRg5NLAlQMAEkemEHBU8",
+  "github_run_id": "34755061048",
+  "commit_sha": "32c87676b3b0d6423436625aad59d026708c345b",
+  "commit_ref": "PlainGPUAutomation/default_shot_-_simple_one_sided_-_tiny_bakes_-_no_additional_lights_in_settings/Scene-Joint-Date_13-09-2026_13-29-54",
+  "test_successful": true
+}

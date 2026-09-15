@@ -1,0 +1,18 @@
+{
+  "gpu_average": "15977",
+  "gpu_median": "16239",
+  "gpu_diff": "-262",
+  "test_name": "New_Default_Shot_w_Shader_Precision_Report",
+  "scene_name": "Joint",
+  "timestamp": "10-09-2026_15-54-54",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1OeQud6iXdfuUMcEAcXYkSJ03qmwBih6N",
+  "github_run_id": "34478850666",
+  "errors": 31,
+  "exceptions": 0,
+  "commit_sha": "5948cb581535e61ea9757b7ce2df30e08cad1504",
+  "commit_ref": "PlayerGPUAutomation/New_Default_Shot_w_Shader_Precision_Report/Scene-Joint-Date_10-09-2026_14-52-24",
+  "test_successful": true
+}

@@ -1,0 +1,18 @@
+{
+  "gpu_average": "6221",
+  "gpu_median": "6221",
+  "gpu_diff": "-0",
+  "test_name": "City_BG_off",
+  "scene_name": "Joint",
+  "timestamp": "10-09-2026_16-28-52",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1_6KkiNa-i5RCTEPYDABI4qa9FPEo2r4w",
+  "github_run_id": "34482250999",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "104e036b7a29483163b8ae8bc8366daa2744cb6d",
+  "commit_ref": "PlayerGPUAutomation/City_BG_off/Scene-Joint-Date_10-09-2026_14-58-46",
+  "test_successful": true
+}
