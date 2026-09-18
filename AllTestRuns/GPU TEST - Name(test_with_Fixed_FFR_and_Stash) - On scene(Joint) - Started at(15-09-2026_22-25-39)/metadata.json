@@ -1,0 +1,18 @@
+{
+  "gpu_average": "8447",
+  "gpu_median": "8442",
+  "gpu_diff": "5",
+  "test_name": "test_with_Fixed_FFR_and_Stash",
+  "scene_name": "Joint",
+  "timestamp": "15-09-2026_22-25-39",
+  "has_thumbnail": true,
+  "started_by": "TheTripleL123",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/15WQLHM1CFyORNzlQCmywT69SU06XISG0",
+  "github_run_id": "35013140505",
+  "errors": 45,
+  "exceptions": 5,
+  "commit_sha": "f94fccae0a55ae9c248fa6d96cb3ed0c34f8adcc",
+  "commit_ref": "PlainGPUAutomation/test_with_Fixed_FFR_and_Stash/Scene-Joint-Date_15-09-2026_19-45-49",
+  "test_successful": true
+}

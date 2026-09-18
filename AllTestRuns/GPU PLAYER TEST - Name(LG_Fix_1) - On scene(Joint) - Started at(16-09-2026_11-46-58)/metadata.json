@@ -1,0 +1,18 @@
+{
+  "gpu_average": "15110",
+  "gpu_median": "15109",
+  "gpu_diff": "1",
+  "test_name": "LG_Fix_1",
+  "scene_name": "Joint",
+  "timestamp": "16-09-2026_11-46-58",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1-MTpjUNgFlEhmsczP0-_IyA52A1DJi0B",
+  "github_run_id": "34979297708",
+  "errors": 35,
+  "exceptions": 0,
+  "commit_sha": "54022b7cfe30a05fe035ae91e91bd9ec4dffe0f9",
+  "commit_ref": "PlayerGPUAutomation/LG_Fix_1/Scene-Joint-Date_15-09-2026_15-27-32",
+  "test_successful": true
+}

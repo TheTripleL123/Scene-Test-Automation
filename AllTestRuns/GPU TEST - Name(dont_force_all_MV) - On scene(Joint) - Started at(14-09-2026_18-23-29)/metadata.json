@@ -1,0 +1,18 @@
+{
+  "gpu_average": "8481",
+  "gpu_median": "8494",
+  "gpu_diff": "-13",
+  "test_name": "dont_force_all_MV",
+  "scene_name": "Joint",
+  "timestamp": "14-09-2026_18-23-29",
+  "has_thumbnail": true,
+  "started_by": "matanberstadt",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1_eLXGS_xLM5EQRuRMyWWq0DvoEgdD2OO",
+  "github_run_id": "34861356997",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "d02a3664cfd1381854eed8d11a4995e9dca9da97",
+  "commit_ref": "PlainGPUAutomation/dont_force_all_MV/Scene-Joint-Date_14-09-2026_15-02-07",
+  "test_successful": true
+}

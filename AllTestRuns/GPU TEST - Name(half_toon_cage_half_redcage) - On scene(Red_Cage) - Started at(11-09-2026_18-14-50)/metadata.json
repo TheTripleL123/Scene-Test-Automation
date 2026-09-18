@@ -1,0 +1,18 @@
+{
+  "gpu_average": "13774",
+  "gpu_median": "13766",
+  "gpu_diff": "7",
+  "test_name": "half_toon_cage_half_redcage",
+  "scene_name": "Red_Cage",
+  "timestamp": "11-09-2026_18-14-50",
+  "has_thumbnail": true,
+  "started_by": "matanberstadt",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1w0aAwniVdVxDq6fIqSjamz9KpmhmmGy6",
+  "github_run_id": "34614456575",
+  "errors": 30,
+  "exceptions": 0,
+  "commit_sha": "2241fcb1360fd9b3daf8e89352441939a9528bc4",
+  "commit_ref": "PlainGPUAutomation/half_toon_cage_half_redcage/Scene-Red_Cage-Date_11-09-2026_14-48-18",
+  "test_successful": true
+}

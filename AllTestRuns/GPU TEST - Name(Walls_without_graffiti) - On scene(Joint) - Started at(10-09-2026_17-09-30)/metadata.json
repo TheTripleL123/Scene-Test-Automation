@@ -1,0 +1,18 @@
+{
+  "gpu_average": "6685",
+  "gpu_median": "6704",
+  "gpu_diff": "-19",
+  "test_name": "Walls_without_graffiti",
+  "scene_name": "Joint",
+  "timestamp": "10-09-2026_17-09-30",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1GxOzXjvqEB4hqFyCApaRxprVbXIimON6",
+  "github_run_id": "34486586912",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "768819e1261c63bbca7ccc7b834a052c895055ec",
+  "commit_ref": "PlainGPUAutomation/Walls_without_graffiti/Scene-Joint-Date_10-09-2026_15-02-15",
+  "test_successful": true
+}

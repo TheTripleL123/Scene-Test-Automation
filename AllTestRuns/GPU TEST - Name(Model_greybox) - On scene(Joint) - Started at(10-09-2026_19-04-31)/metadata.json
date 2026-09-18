@@ -1,0 +1,18 @@
+{
+  "gpu_average": "6281",
+  "gpu_median": "6288",
+  "gpu_diff": "-7",
+  "test_name": "Model_greybox",
+  "scene_name": "Joint",
+  "timestamp": "10-09-2026_19-04-31",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1DZnbLhjur0SRfComyGhnFY18ZhGrcZZl",
+  "github_run_id": "34499231572",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "1fba532c9e074c0bb7b24c3a6fcd9e2a8f2658e5",
+  "commit_ref": "PlainGPUAutomation/Model_greybox/Scene-Joint-Date_10-09-2026_15-04-33",
+  "test_successful": true
+}
