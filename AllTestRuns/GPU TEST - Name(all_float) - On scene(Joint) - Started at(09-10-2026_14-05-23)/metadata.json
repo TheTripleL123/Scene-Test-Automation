@@ -1,0 +1,18 @@
+{
+  "gpu_average": "15172",
+  "gpu_median": "15374",
+  "gpu_diff": "-202",
+  "test_name": "all_float",
+  "scene_name": "Joint",
+  "timestamp": "09-10-2026_14-05-23",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1oS3kbrQ7NlkfGtAaMyrpWnMpgboLf3v6",
+  "github_run_id": "37921127721",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "d00e28c785dc57c327142da1c626682f1c4d8418",
+  "commit_ref": "Automations/PlainGPUAutomation/all_float/Scene-Joint-Date_09-10-2026_13-02-20",
+  "test_successful": true
+}

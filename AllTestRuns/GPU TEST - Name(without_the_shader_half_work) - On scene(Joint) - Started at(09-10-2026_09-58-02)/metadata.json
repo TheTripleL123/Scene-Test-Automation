@@ -1,0 +1,18 @@
+{
+  "gpu_average": "15172",
+  "gpu_median": "15418",
+  "gpu_diff": "-246",
+  "test_name": "without_the_shader_half_work",
+  "scene_name": "Joint",
+  "timestamp": "09-10-2026_09-58-02",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1jYO2tfnL8Ukh-IcjNIB6k6jJugL9LBiE",
+  "github_run_id": "37895930731",
+  "errors": 33,
+  "exceptions": 0,
+  "commit_sha": "685c277cde9c9e01e131b03ca57597103d1f7cca",
+  "commit_ref": "Automations/PlainGPUAutomation/without_the_shader_half_work/Scene-Joint-Date_09-10-2026_08-51-13",
+  "test_successful": true
+}

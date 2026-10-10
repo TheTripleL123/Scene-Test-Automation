@@ -1,0 +1,18 @@
+{
+  "gpu_average": "17002",
+  "gpu_median": "17007",
+  "gpu_diff": "-5",
+  "test_name": "Daily Run - Red Cage",
+  "scene_name": "Red Cage",
+  "timestamp": "10-10-2026_05-12-11",
+  "has_thumbnail": true,
+  "started_by": "Nightly",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1F5YrOl0V2quwSiR_sXEkEQ81tnutkcOy",
+  "github_run_id": "38003041489",
+  "errors": 32,
+  "exceptions": 5,
+  "commit_sha": "1b1a74904a46dd58b3df0d79f7998ab559db17f9",
+  "commit_ref": "master",
+  "test_successful": true
+}

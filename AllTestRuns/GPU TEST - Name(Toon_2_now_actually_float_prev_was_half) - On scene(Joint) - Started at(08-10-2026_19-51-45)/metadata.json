@@ -1,0 +1,18 @@
+{
+  "gpu_average": "10839",
+  "gpu_median": "10872",
+  "gpu_diff": "-33",
+  "test_name": "Toon_2_now_actually_float_prev_was_half",
+  "scene_name": "Joint",
+  "timestamp": "08-10-2026_19-51-45",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1qfsJ4YYalwWfFTE1dcSoYYbCKgo2vB-f",
+  "github_run_id": "37810689753",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "39ce8b4538530cdf285f093359341d7cd291c2cf",
+  "commit_ref": "Automations/PlainGPUAutomation/Toon_2_now_actually_float_prev_was_half/Scene-Joint-Date_08-10-2026_18-37-28",
+  "test_successful": true
+}

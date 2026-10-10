@@ -1,0 +1,18 @@
+{
+  "gpu_average": "15240",
+  "gpu_median": "15516",
+  "gpu_diff": "-276",
+  "test_name": "hard_reduce_floats",
+  "scene_name": "Joint",
+  "timestamp": "09-10-2026_12-38-18",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1BvCDza9Bq_70B_u8wC4rN8WcZhjK3ado",
+  "github_run_id": "37912027543",
+  "errors": 32,
+  "exceptions": 0,
+  "commit_sha": "23950d4a88a7ade41270edd5d99e3d19cc9a88b4",
+  "commit_ref": "Automations/PlainGPUAutomation/hard_reduce_floats/Scene-Joint-Date_09-10-2026_11-08-55",
+  "test_successful": true
+}
