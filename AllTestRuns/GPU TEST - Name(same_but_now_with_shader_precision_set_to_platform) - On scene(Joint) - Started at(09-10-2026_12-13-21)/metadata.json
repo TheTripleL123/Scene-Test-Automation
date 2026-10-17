@@ -1,0 +1,18 @@
+{
+  "gpu_average": "15046",
+  "gpu_median": "14752",
+  "gpu_diff": "294",
+  "test_name": "same_but_now_with_shader_precision_set_to_platform",
+  "scene_name": "Joint",
+  "timestamp": "09-10-2026_12-13-21",
+  "has_thumbnail": true,
+  "started_by": "Muadave",
+  "isArchived": false,
+  "drive_link": "https://drive.google.com/drive/folders/1PEJRAiNPz1I-0qyHP3-7SAaJW3msX_aE",
+  "github_run_id": "37909336593",
+  "errors": 31,
+  "exceptions": 0,
+  "commit_sha": "03355c77f375ff084005b51be76bef573fc02a71",
+  "commit_ref": "Automations/PlainGPUAutomation/same_but_now_with_shader_precision_set_to_platform/Scene-Joint-Date_09-10-2026_11-12-58",
+  "test_successful": true
+}
